@@ -1,0 +1,1845 @@
+openapi: 3.0.3
+info:
+  title: API Sistema de Inventario Multi-Sucursal
+  description: >
+    Contrato OpenAPI base del backend de inventario multi-sucursal.
+    Define endpoints por modulo antes de implementar controllers para mantener
+    separacion de responsabilidades y buenas practicas REST.
+  version: "1.0.0"
+
+servers:
+  - url: http://localhost:8080
+    description: Servidor local (dev)
+  - url: http://backend:8080
+    description: Servidor en docker
+
+tags:
+  - name: Auth
+  - name: Usuarios
+  - name: Sucursales
+  - name: Productos
+  - name: Inventario
+  - name: Compras
+  - name: Proveedores
+  - name: Ventas
+  - name: ListasPrecios
+  - name: Transferencias
+  - name: Logistica
+  - name: Alertas
+  - name: Dashboard
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ApiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Operacion exitosa
+        data:
+          nullable: true
+        timestamp:
+          type: string
+          format: date-time
+          example: "2026-04-25T10:30:00Z"
+
+    ApiError:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: Error de validacion
+        data:
+          nullable: true
+          example: null
+        timestamp:
+          type: string
+          format: date-time
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          example: admin@optiPlant.com
+        password:
+          type: string
+          format: password
+          minLength: 6
+          example: Admin123!
+
+    AuthResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        tokenType:
+          type: string
+          example: Bearer
+        email:
+          type: string
+          format: email
+        nombreCompleto:
+          type: string
+
+    UsuarioRequest:
+      type: object
+      required: [nombre, apellido, email, idRol]
+      properties:
+        nombre:
+          type: string
+        apellido:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+          description: Obligatoria en creacion, opcional en actualizacion.
+        idRol:
+          type: integer
+          format: int64
+        idSucursal:
+          type: integer
+          format: int64
+          nullable: true
+
+    UsuarioResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        nombre:
+          type: string
+        apellido:
+          type: string
+        email:
+          type: string
+        activo:
+          type: boolean
+        rolId:
+          type: integer
+          format: int64
+        rolNombre:
+          type: string
+          enum: [ADMIN, GERENTE, OPERADOR]
+        sucursalId:
+          type: integer
+          format: int64
+          nullable: true
+        sucursalNombre:
+          type: string
+          nullable: true
+
+    SucursalRequest:
+      type: object
+      required: [nombre]
+      properties:
+        nombre:
+          type: string
+        direccion:
+          type: string
+        telefono:
+          type: string
+
+    SucursalResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        nombre:
+          type: string
+        direccion:
+          type: string
+        telefono:
+          type: string
+        activo:
+          type: boolean
+
+    ProductoUnidadRequest:
+      type: object
+      required: [idUnidad, esPrincipal, factorConversion]
+      properties:
+        idUnidad:
+          type: integer
+          format: int64
+        esPrincipal:
+          type: boolean
+        factorConversion:
+          type: number
+          format: double
+
+    ProductoRequest:
+      type: object
+      required: [sku, nombre, unidades]
+      properties:
+        sku:
+          type: string
+          maxLength: 50
+        nombre:
+          type: string
+          maxLength: 200
+        descripcion:
+          type: string
+        unidades:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductoUnidadRequest'
+
+    ProductoResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        sku:
+          type: string
+        nombre:
+          type: string
+        descripcion:
+          type: string
+        activo:
+          type: boolean
+
+    InventarioConfigRequest:
+      type: object
+      properties:
+        stockMinimo:
+          type: number
+          format: double
+          minimum: 0
+        stockMaximo:
+          type: number
+          format: double
+          minimum: 0
+
+    MovimientoManualRequest:
+      type: object
+      required: [tipo, cantidad]
+      properties:
+        tipo:
+          type: string
+          enum: [AJUSTE_POSITIVO, AJUSTE_NEGATIVO, DEVOLUCION, MERMA]
+        cantidad:
+          type: number
+          format: double
+          minimum: 0.0001
+        motivo:
+          type: string
+          maxLength: 300
+
+    InventarioResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        productoId:
+          type: integer
+          format: int64
+        productoNombre:
+          type: string
+        sucursalId:
+          type: integer
+          format: int64
+        sucursalNombre:
+          type: string
+        stockActual:
+          type: number
+          format: double
+        stockMinimo:
+          type: number
+          format: double
+        stockMaximo:
+          type: number
+          format: double
+          nullable: true
+        costoPromedioPonderado:
+          type: number
+          format: double
+
+    MovimientoResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        inventarioId:
+          type: integer
+          format: int64
+        usuarioId:
+          type: integer
+          format: int64
+        tipo:
+          type: string
+        cantidad:
+          type: number
+          format: double
+        motivo:
+          type: string
+        referenciaDocumento:
+          type: string
+        fecha:
+          type: string
+          format: date-time
+        stockAntes:
+          type: number
+          format: double
+        stockDespues:
+          type: number
+          format: double
+
+    LineaOrdenRequest:
+      type: object
+      required: [idProducto, cantidadPedida, precioUnitario]
+      properties:
+        idProducto:
+          type: integer
+          format: int64
+        cantidadPedida:
+          type: number
+          format: double
+          minimum: 0.0001
+        precioUnitario:
+          type: number
+          format: double
+          minimum: 0.0001
+        descuento:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 100
+
+    OrdenCompraRequest:
+      type: object
+      required: [idProveedor, idSucursal, lineas]
+      properties:
+        idProveedor:
+          type: integer
+          format: int64
+        idSucursal:
+          type: integer
+          format: int64
+        fechaEstimadaEntrega:
+          type: string
+          format: date
+          nullable: true
+        plazoPagoDias:
+          type: integer
+          minimum: 1
+          nullable: true
+        lineas:
+          type: array
+          items:
+            $ref: '#/components/schemas/LineaOrdenRequest'
+
+    LineaRecepcionRequest:
+      type: object
+      required: [idDetalle, cantidadRecibida]
+      properties:
+        idDetalle:
+          type: integer
+          format: int64
+        cantidadRecibida:
+          type: number
+          format: double
+          minimum: 0
+
+    RecepcionCompraRequest:
+      type: object
+      required: [idOrden, lineas]
+      properties:
+        idOrden:
+          type: integer
+          format: int64
+        lineas:
+          type: array
+          items:
+            $ref: '#/components/schemas/LineaRecepcionRequest'
+
+    VentaRequest:
+      type: object
+      required: [idSucursal, lineas]
+      properties:
+        idSucursal:
+          type: integer
+          format: int64
+        idListaPrecios:
+          type: integer
+          format: int64
+          nullable: true
+        descuentoGlobal:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 100
+          default: 0
+        lineas:
+          type: array
+          items:
+            $ref: '#/components/schemas/LineaVentaRequest'
+
+    LineaVentaRequest:
+      type: object
+      required: [idProducto, cantidad]
+      properties:
+        idProducto:
+          type: integer
+          format: int64
+        cantidad:
+          type: number
+          format: double
+          minimum: 0.0001
+        descuentoLinea:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 100
+          default: 0
+
+    TransferenciaRequest:
+      type: object
+      required: [idSucursalOrigen, idSucursalDestino, urgencia, lineas]
+      properties:
+        idSucursalOrigen:
+          type: integer
+          format: int64
+        idSucursalDestino:
+          type: integer
+          format: int64
+        urgencia:
+          type: string
+          enum: [NORMAL, ALTA]
+        observaciones:
+          type: string
+        lineas:
+          type: array
+          items:
+            $ref: '#/components/schemas/LineaTransferenciaRequest'
+
+    LineaTransferenciaRequest:
+      type: object
+      required: [idProducto, cantidadSolicitada]
+      properties:
+        idProducto:
+          type: integer
+          format: int64
+        cantidadSolicitada:
+          type: number
+          format: double
+          minimum: 0.0001
+
+    DespachoTransferenciaRequest:
+      type: object
+      required: [transportista, fechaEstimadaLlegada, lineas]
+      properties:
+        transportista:
+          type: string
+        fechaEstimadaLlegada:
+          type: string
+          format: date
+        lineas:
+          type: array
+          items:
+            $ref: '#/components/schemas/LineaDespachoRequest'
+
+    LineaDespachoRequest:
+      type: object
+      required: [idDetalle, cantidadDespachada]
+      properties:
+        idDetalle:
+          type: integer
+          format: int64
+        cantidadDespachada:
+          type: number
+          format: double
+          minimum: 0
+
+    RecepcionTransferenciaRequest:
+      type: object
+      required: [lineas]
+      properties:
+        lineas:
+          type: array
+          items:
+            $ref: '#/components/schemas/LineaRecepcionTransferenciaRequest'
+
+    LineaRecepcionTransferenciaRequest:
+      type: object
+      required: [idDetalle, cantidadRecibida]
+      properties:
+        idDetalle:
+          type: integer
+          format: int64
+        cantidadRecibida:
+          type: number
+          format: double
+          minimum: 0
+
+    FaltanteTratamientoRequest:
+      type: object
+      required: [tratamientoFaltante]
+      properties:
+        tratamientoFaltante:
+          type: string
+          enum: [REENVIO, AJUSTE_ACEPTADO, RECLAMACION]
+
+paths:
+  /api/v1/auth/login:
+    post:
+      tags: [Auth]
+      summary: Login de usuario
+      description: Autenticacion por email y password.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        "200":
+          description: Login exitoso
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/AuthResponse'
+        "401":
+          description: Credenciales invalidas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /api/v1/auth/me:
+    get:
+      tags: [Auth]
+      summary: Usuario autenticado actual
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Perfil del usuario autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        "401":
+          description: No autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /api/v1/usuarios:
+    get:
+      tags: [Usuarios]
+      summary: Listar usuarios
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 0
+        - in: query
+          name: size
+          schema:
+            type: integer
+            default: 20
+        - in: query
+          name: activo
+          schema:
+            type: boolean
+        - in: query
+          name: sucursalId
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Lista paginada de usuarios
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    post:
+      tags: [Usuarios]
+      summary: Crear usuario
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsuarioRequest'
+      responses:
+        "201":
+          description: Usuario creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/usuarios/{id}:
+    get:
+      tags: [Usuarios]
+      summary: Obtener usuario por ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Usuario encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        "404":
+          description: Usuario no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+    put:
+      tags: [Usuarios]
+      summary: Actualizar usuario
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsuarioRequest'
+      responses:
+        "200":
+          description: Usuario actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/usuarios/{id}/password:
+    patch:
+      tags: [Usuarios]
+      summary: Cambiar password de usuario
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password]
+              properties:
+                password:
+                  type: string
+                  minLength: 8
+      responses:
+        "200":
+          description: Password actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/usuarios/{id}/desactivar:
+    patch:
+      tags: [Usuarios]
+      summary: Desactivar usuario
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Usuario desactivado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/sucursales:
+    get:
+      tags: [Sucursales]
+      summary: Listar sucursales activas
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Lista de sucursales
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    post:
+      tags: [Sucursales]
+      summary: Crear sucursal
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SucursalRequest'
+      responses:
+        "201":
+          description: Sucursal creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/sucursales/{id}:
+    get:
+      tags: [Sucursales]
+      summary: Obtener sucursal por ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Sucursal encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    put:
+      tags: [Sucursales]
+      summary: Actualizar sucursal
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SucursalRequest'
+      responses:
+        "200":
+          description: Sucursal actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/sucursales/{id}/desactivar:
+    patch:
+      tags: [Sucursales]
+      summary: Desactivar sucursal
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Sucursal desactivada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/productos:
+    get:
+      tags: [Productos]
+      summary: Listar productos
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 0
+        - in: query
+          name: size
+          schema:
+            type: integer
+            default: 20
+        - in: query
+          name: nombre
+          schema:
+            type: string
+        - in: query
+          name: sku
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Lista de productos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    post:
+      tags: [Productos]
+      summary: Crear producto
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductoRequest'
+      responses:
+        "201":
+          description: Producto creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/productos/{id}:
+    get:
+      tags: [Productos]
+      summary: Obtener producto por ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Producto encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    put:
+      tags: [Productos]
+      summary: Actualizar producto
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductoRequest'
+      responses:
+        "200":
+          description: Producto actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/productos/{id}/desactivar:
+    patch:
+      tags: [Productos]
+      summary: Desactivar producto
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Producto desactivado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/inventario:
+    get:
+      tags: [Inventario]
+      summary: Inventario global
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: sucursalId
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: productoId
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Inventario global filtrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/inventario/sucursal/{sucursalId}:
+    get:
+      tags: [Inventario]
+      summary: Inventario por sucursal
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: sucursalId
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Inventario de una sucursal
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/inventario/{id}:
+    get:
+      tags: [Inventario]
+      summary: Detalle de inventario
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Inventario encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/inventario/{id}/config:
+    patch:
+      tags: [Inventario]
+      summary: Configurar stock minimo y maximo
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InventarioConfigRequest'
+      responses:
+        "200":
+          description: Configuracion actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/inventario/{id}/ingresos:
+    post:
+      tags: [Inventario]
+      summary: Registrar ingreso manual de stock
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MovimientoManualRequest'
+      responses:
+        "201":
+          description: Ingreso registrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/inventario/{id}/retiros:
+    post:
+      tags: [Inventario]
+      summary: Registrar retiro manual de stock
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MovimientoManualRequest'
+      responses:
+        "201":
+          description: Retiro registrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        "422":
+          description: Stock insuficiente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /api/v1/inventario/{id}/movimientos:
+    get:
+      tags: [Inventario]
+      summary: Historial de movimientos de inventario
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 0
+        - in: query
+          name: size
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Movimientos paginados
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/compras:
+    get:
+      tags: [Compras]
+      summary: Listar ordenes de compra
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: sucursalId
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: proveedorId
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: estado
+          schema:
+            type: string
+            enum: [PENDIENTE, RECIBIDA, RECIBIDA_CON_FALTANTES, CANCELADA]
+      responses:
+        "200":
+          description: Ordenes encontradas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    post:
+      tags: [Compras]
+      summary: Crear orden de compra
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrdenCompraRequest'
+      responses:
+        "201":
+          description: Orden creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/compras/{id}:
+    get:
+      tags: [Compras]
+      summary: Obtener orden de compra por ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Orden encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/compras/{id}/cancelar:
+    patch:
+      tags: [Compras]
+      summary: Cancelar orden pendiente
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Orden cancelada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/compras/{id}/recepcion:
+    post:
+      tags: [Compras]
+      summary: Confirmar recepcion de compra
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecepcionCompraRequest'
+      responses:
+        "200":
+          description: Recepcion confirmada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/proveedores:
+    get:
+      tags: [Proveedores]
+      summary: Listar proveedores activos
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Lista de proveedores
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    post:
+      tags: [Proveedores]
+      summary: Crear proveedor
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nombre]
+              properties:
+                nombre:
+                  type: string
+                contacto:
+                  type: string
+                telefono:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                condicionesPago:
+                  type: string
+      responses:
+        "201":
+          description: Proveedor creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/proveedores/{id}:
+    get:
+      tags: [Proveedores]
+      summary: Obtener proveedor por ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Proveedor encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/proveedores/{id}/historial:
+    get:
+      tags: [Proveedores]
+      summary: Historial de compras por proveedor
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: desde
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: hasta
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Historial del proveedor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/ventas:
+    get:
+      tags: [Ventas]
+      summary: Listar ventas
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: sucursalId
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: desde
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: hasta
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 0
+        - in: query
+          name: size
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Ventas encontradas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    post:
+      tags: [Ventas]
+      summary: Registrar venta
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VentaRequest'
+      responses:
+        "201":
+          description: Venta registrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        "422":
+          description: Regla de negocio no cumplida (stock insuficiente)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /api/v1/ventas/{id}:
+    get:
+      tags: [Ventas]
+      summary: Obtener venta por ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Venta encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/ventas/{id}/anular:
+    patch:
+      tags: [Ventas]
+      summary: Anular venta
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [motivoAnulacion]
+              properties:
+                motivoAnulacion:
+                  type: string
+                  maxLength: 300
+      responses:
+        "200":
+          description: Venta anulada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/listas-precios:
+    get:
+      tags: [ListasPrecios]
+      summary: Listar listas de precios activas
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Listas de precios
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    post:
+      tags: [ListasPrecios]
+      summary: Crear lista de precios
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nombre]
+              properties:
+                nombre:
+                  type: string
+                descripcion:
+                  type: string
+      responses:
+        "201":
+          description: Lista creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/listas-precios/{id}:
+    put:
+      tags: [ListasPrecios]
+      summary: Actualizar lista de precios
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nombre:
+                  type: string
+                descripcion:
+                  type: string
+                activo:
+                  type: boolean
+      responses:
+        "200":
+          description: Lista actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/transferencias:
+    get:
+      tags: [Transferencias]
+      summary: Listar transferencias
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: sucursalId
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: estado
+          schema:
+            type: string
+            enum: [PENDIENTE_APROBACION, EN_PREPARACION, EN_TRANSITO, RECIBIDA, RECIBIDA_CON_FALTANTES, RECHAZADA]
+      responses:
+        "200":
+          description: Transferencias encontradas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    post:
+      tags: [Transferencias]
+      summary: Solicitar transferencia
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferenciaRequest'
+      responses:
+        "201":
+          description: Transferencia creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/transferencias/{id}:
+    get:
+      tags: [Transferencias]
+      summary: Obtener transferencia por ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Transferencia encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/transferencias/{id}/aprobar:
+    patch:
+      tags: [Transferencias]
+      summary: Aprobar transferencia
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Transferencia aprobada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/transferencias/{id}/rechazar:
+    patch:
+      tags: [Transferencias]
+      summary: Rechazar transferencia
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [motivo]
+              properties:
+                motivo:
+                  type: string
+                  maxLength: 300
+      responses:
+        "200":
+          description: Transferencia rechazada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/transferencias/{id}/despacho:
+    post:
+      tags: [Transferencias]
+      summary: Registrar despacho de transferencia
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DespachoTransferenciaRequest'
+      responses:
+        "200":
+          description: Despacho registrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/transferencias/{id}/recepcion:
+    post:
+      tags: [Transferencias]
+      summary: Confirmar recepcion de transferencia
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecepcionTransferenciaRequest'
+      responses:
+        "200":
+          description: Recepcion confirmada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/transferencias/{id}/faltantes/{detalleId}:
+    patch:
+      tags: [Transferencias]
+      summary: Definir tratamiento de faltante
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - in: path
+          name: detalleId
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FaltanteTratamientoRequest'
+      responses:
+        "200":
+          description: Tratamiento registrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/logistica/reporte:
+    get:
+      tags: [Logistica]
+      summary: Reporte de cumplimiento logistico
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: sucursalOrigenId
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: sucursalDestinoId
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: desde
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Reporte logistico
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/logistica/en-transito:
+    get:
+      tags: [Logistica]
+      summary: Transferencias en transito
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Lista de transferencias en transito
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/alertas:
+    get:
+      tags: [Alertas]
+      summary: Listar alertas activas
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: sucursalId
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: tipo
+          schema:
+            type: string
+            enum: [STOCK_MINIMO, STOCK_MAXIMO]
+      responses:
+        "200":
+          description: Alertas activas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/alertas/{id}/resolver:
+    patch:
+      tags: [Alertas]
+      summary: Resolver alerta
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Alerta resuelta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/dashboard/sucursal/{sucursalId}:
+    get:
+      tags: [Dashboard]
+      summary: KPIs por sucursal
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: sucursalId
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Dashboard de sucursal
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/dashboard/global:
+    get:
+      tags: [Dashboard]
+      summary: Dashboard global
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Dashboard global
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
