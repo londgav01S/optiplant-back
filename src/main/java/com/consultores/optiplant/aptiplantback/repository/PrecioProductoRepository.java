@@ -7,5 +7,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface PrecioProductoRepository extends JpaRepository<PrecioProducto, Long> {
 
     List<PrecioProducto> findByListaIdAndProductoId(Long listaId, Long productoId);
+
+    List<PrecioProducto> findByListaIdAndProductoIdAndFechaInicioLessThanEqualAndFechaFinGreaterThanEqual(Long listaId,
+                                                                                                        Long productoId,
+                                                                                                        java.time.LocalDate fechaInicio,
+                                                                                                        java.time.LocalDate fechaFin);
 }
 

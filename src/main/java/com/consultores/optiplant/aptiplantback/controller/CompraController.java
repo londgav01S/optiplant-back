@@ -39,7 +39,7 @@ public class CompraController {
      * GET /api/compras
      * Listar órdenes de compra con filtros opcionales
      */
-    @PreAuthorize("hasAnyRole('ADMIN','GERENTE')")
+    @PreAuthorize("@authorizationService.canListCompras(authentication, #p2)")
     @GetMapping
     public ResponseEntity<ApiResponse<Page<OrdenCompraResponse>>> listar(
         @RequestParam(defaultValue = "0") int page,
@@ -56,7 +56,7 @@ public class CompraController {
      * POST /api/compras
      * Crear una nueva orden de compra
      */
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("@authorizationService.canCreateCompra(authentication, #p0.idSucursal)")
     @PostMapping
     public ResponseEntity<ApiResponse<OrdenCompraResponse>> crear(
         @Valid @RequestBody OrdenCompraRequest request,
@@ -71,9 +71,9 @@ public class CompraController {
      * GET /api/compras/{id}
      * Obtener una orden de compra específica con sus detalles
      */
-    @PreAuthorize("hasAnyRole('ADMIN','GERENTE')")
+    @PreAuthorize("@authorizationService.canReadCompra(authentication, #p0)")
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<OrdenCompraResponse>> obtenerPorId(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<OrdenCompraResponse>> obtenerPorId(@PathVariable Long id, Authentication auth) {
         OrdenCompraResponse response = compraService.obtenerPorId(id);
         return ResponseEntity.ok(ApiResponse.success("Orden de compra obtenida", response));
     }
@@ -82,9 +82,9 @@ public class CompraController {
      * PATCH /api/compras/{id}/cancelar
      * Cancelar una orden de compra en estado PENDIENTE
      */
-    @PreAuthorize("hasAnyRole('ADMIN','GERENTE')")
+    @PreAuthorize("@authorizationService.canWriteCompra(authentication, #p0)")
     @PatchMapping("/{id}/cancelar")
-    public ResponseEntity<ApiResponse<OrdenCompraResponse>> cancelar(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<OrdenCompraResponse>> cancelar(@PathVariable Long id, Authentication auth) {
         OrdenCompraResponse response = compraService.cancelar(id);
         return ResponseEntity.ok(ApiResponse.success("Orden de compra cancelada", response));
     }
@@ -93,7 +93,7 @@ public class CompraController {
      * POST /api/compras/{id}/recepcion
      * Confirmar la recepción de una orden de compra
      */
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("@authorizationService.canWriteCompra(authentication, #p0)")
     @PostMapping("/{id}/recepcion")
     public ResponseEntity<ApiResponse<OrdenCompraResponse>> recepcionar(
         @PathVariable Long id,

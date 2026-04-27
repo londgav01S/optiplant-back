@@ -4,8 +4,8 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
-import java.security.Key;
 import java.util.Date;
+import javax.crypto.SecretKey;
 import java.util.Map;
 import java.util.function.Function;
 import org.springframework.beans.factory.annotation.Value;
@@ -64,7 +64,7 @@ public class JwtUtil {
             .getPayload();
     }
 
-    private Key getSigningKey() {
+    private SecretKey getSigningKey() {
         if (secret == null || secret.length() < 32) {
             throw new IllegalStateException("La propiedad jwt.secret debe tener al menos 32 caracteres");
         }

@@ -9,7 +9,7 @@ public interface VentaService {
 
     Page<VentaResponse> listar(int page, int size, Long sucursalId, LocalDate desde, LocalDate hasta);
 
-    VentaResponse crear(VentaRequest request);
+    VentaResponse crear(VentaRequest request, Long usuarioId);
 
     VentaResponse obtenerPorId(Long id);
 

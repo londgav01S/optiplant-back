@@ -2,10 +2,14 @@ package com.consultores.optiplant.aptiplantback.repository;
 
 import com.consultores.optiplant.aptiplantback.entity.MovimientoInventario;
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface MovimientoRepository extends JpaRepository<MovimientoInventario, Long> {
 
     List<MovimientoInventario> findByInventarioIdOrderByFechaDesc(Long inventarioId);
+
+    Page<MovimientoInventario> findByInventarioIdOrderByFechaDesc(Long inventarioId, Pageable pageable);
 }
 

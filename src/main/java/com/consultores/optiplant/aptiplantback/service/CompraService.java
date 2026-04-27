@@ -10,12 +10,12 @@ public interface CompraService {
 
     Page<OrdenCompraResponse> listar(int page, int size, Long sucursalId, Long proveedorId, EstadoOrdenCompra estado);
 
-    OrdenCompraResponse crear(OrdenCompraRequest request);
+    OrdenCompraResponse crear(OrdenCompraRequest request, Long usuarioId);
 
     OrdenCompraResponse obtenerPorId(Long id);
 
     OrdenCompraResponse cancelar(Long id);
 
-    OrdenCompraResponse recepcionar(Long id, RecepcionCompraRequest request);
+    OrdenCompraResponse recepcionar(Long id, RecepcionCompraRequest request, Long usuarioId);
 }
 

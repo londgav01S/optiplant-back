@@ -1,6 +1,7 @@
 package com.consultores.optiplant.aptiplantback.service;
 
 import com.consultores.optiplant.aptiplantback.entity.Proveedor;
+import com.consultores.optiplant.aptiplantback.dto.response.OrdenCompraResponse;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -12,6 +13,6 @@ public interface ProveedorService {
 
     Proveedor obtenerPorId(Long id);
 
-    List<?> historialCompras(Long proveedorId, LocalDate desde, LocalDate hasta);
+    List<OrdenCompraResponse> historialCompras(Long proveedorId, LocalDate desde, LocalDate hasta);
 }
 

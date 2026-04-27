@@ -3,6 +3,7 @@ package com.consultores.optiplant.aptiplantback.service;
 import com.consultores.optiplant.aptiplantback.dto.request.InventarioConfigRequest;
 import com.consultores.optiplant.aptiplantback.dto.response.InventarioResponse;
 import com.consultores.optiplant.aptiplantback.dto.response.MovimientoResponse;
+import com.consultores.optiplant.aptiplantback.enums.TipoMovimiento;
 import java.math.BigDecimal;
 import java.util.List;
 import org.springframework.data.domain.Page;
@@ -17,9 +18,11 @@ public interface InventarioService {
 
     InventarioResponse actualizarConfig(Long id, InventarioConfigRequest request);
 
-    MovimientoResponse registrarIngreso(Long inventarioId, String tipo, BigDecimal cantidad, String motivo);
+    MovimientoResponse registrarIngreso(Long inventarioId, TipoMovimiento tipo, BigDecimal cantidad,
+                                        String motivo, BigDecimal precioUnitario, Long usuarioId);
 
-    MovimientoResponse registrarRetiro(Long inventarioId, String tipo, BigDecimal cantidad, String motivo);
+    MovimientoResponse registrarRetiro(Long inventarioId, TipoMovimiento tipo, BigDecimal cantidad,
+                                       String motivo, Long usuarioId);
 
     Page<MovimientoResponse> historialMovimientos(Long inventarioId, int page, int size);
 }
