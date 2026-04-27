@@ -96,6 +96,16 @@ public class TransferenciaController {
         return ResponseEntity.ok(ApiResponse.success("Transferencia despachada", data));
     }
 
+    @PreAuthorize("@authorizationService.canDespacharTransferencia(authentication, #id)")
+    @PostMapping("/{id}/enviar")
+    public ResponseEntity<ApiResponse<TransferenciaResponse>> enviarCompat(
+            @PathVariable Long id,
+            Authentication auth) {
+        Long usuarioId = getAuthUserId(auth);
+        TransferenciaResponse data = transferenciaService.enviarCompat(id, usuarioId);
+        return ResponseEntity.ok(ApiResponse.success("Transferencia enviada", data));
+    }
+
     @PreAuthorize("@authorizationService.canRecepcionarTransferencia(authentication, #id)")
     @PostMapping("/{id}/recepcionar")
     public ResponseEntity<ApiResponse<TransferenciaResponse>> recepcionar(
@@ -105,6 +115,23 @@ public class TransferenciaController {
         Long usuarioId = getAuthUserId(auth);
         TransferenciaResponse data = transferenciaService.recepcionar(id, request, usuarioId);
         return ResponseEntity.ok(ApiResponse.success("Transferencia recepcionada", data));
+    }
+
+    @PreAuthorize("@authorizationService.canRecepcionarTransferencia(authentication, #id)")
+    @PostMapping("/{id}/recibir")
+    public ResponseEntity<ApiResponse<TransferenciaResponse>> recibirCompat(
+            @PathVariable Long id,
+            Authentication auth) {
+        Long usuarioId = getAuthUserId(auth);
+        TransferenciaResponse data = transferenciaService.recibirCompat(id, usuarioId);
+        return ResponseEntity.ok(ApiResponse.success("Transferencia recibida", data));
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN','GERENTE')")
+    @PostMapping("/{id}/cancelar")
+    public ResponseEntity<ApiResponse<TransferenciaResponse>> cancelarCompat(@PathVariable Long id) {
+        TransferenciaResponse data = transferenciaService.cancelarCompat(id);
+        return ResponseEntity.ok(ApiResponse.success("Transferencia cancelada", data));
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','GERENTE')")

@@ -39,4 +39,11 @@ public class AlertaController {
         AlertaResponse data = alertaService.resolver(id);
         return ResponseEntity.ok(ApiResponse.success("Alerta resuelta", data));
     }
+
+    @PreAuthorize("hasAnyRole('ADMIN','GERENTE','OPERADOR')")
+    @PatchMapping("/{id}/leida")
+    public ResponseEntity<ApiResponse<AlertaResponse>> marcarLeida(@PathVariable Long id) {
+        AlertaResponse data = alertaService.resolver(id);
+        return ResponseEntity.ok(ApiResponse.success("Alerta marcada como leída", data));
+    }
 }

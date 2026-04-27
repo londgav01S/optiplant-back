@@ -24,6 +24,9 @@ public interface InventarioService {
     MovimientoResponse registrarRetiro(Long inventarioId, TipoMovimiento tipo, BigDecimal cantidad,
                                        String motivo, Long usuarioId);
 
+    MovimientoResponse ajustarStock(Long productoId, Long sucursalId, BigDecimal cantidad,
+                                    String motivo, Long usuarioId);
+
     Page<MovimientoResponse> historialMovimientos(Long inventarioId, int page, int size);
 }
 

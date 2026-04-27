@@ -237,6 +237,51 @@ public class TransferenciaServiceImpl implements TransferenciaService {
     }
 
     @Override
+    public TransferenciaResponse enviarCompat(Long id, Long usuarioId) {
+        Transferencia transferencia = cargarConDetalles(id);
+
+        if (transferencia.getEstado() == EstadoTransferencia.PENDIENTE_APROBACION) {
+            aprobar(id, usuarioId);
+            transferencia = cargarConDetalles(id);
+        }
+
+        if (transferencia.getEstado() != EstadoTransferencia.EN_PREPARACION) {
+            throw new BusinessException("La transferencia debe estar en estado EN_PREPARACION para enviarse");
+        }
+
+        List<LineaDespachoRequest> lineas = transferencia.getDetalles().stream()
+                .map(detalle -> new LineaDespachoRequest(detalle.getId(), detalle.getCantidadSolicitada()))
+                .toList();
+
+        DespachoTransferenciaRequest request = new DespachoTransferenciaRequest(null, null, lineas);
+        return despachar(id, request, usuarioId);
+    }
+
+    @Override
+    public TransferenciaResponse recibirCompat(Long id, Long usuarioId) {
+        Transferencia transferencia = cargarConDetalles(id);
+
+        if (transferencia.getEstado() != EstadoTransferencia.EN_TRANSITO) {
+            throw new BusinessException("La transferencia debe estar en estado EN_TRANSITO para recibirse");
+        }
+
+        List<LineaRecepcionTransferenciaRequest> lineas = transferencia.getDetalles().stream()
+                .map(detalle -> new LineaRecepcionTransferenciaRequest(
+                        detalle.getId(),
+                        detalle.getCantidadDespachada() != null ? detalle.getCantidadDespachada() : detalle.getCantidadSolicitada()
+                ))
+                .toList();
+
+        RecepcionTransferenciaRequest request = new RecepcionTransferenciaRequest(lineas);
+        return recepcionar(id, request, usuarioId);
+    }
+
+    @Override
+    public TransferenciaResponse cancelarCompat(Long id) {
+        return rechazar(id, "Cancelación solicitada desde frontend");
+    }
+
+    @Override
     public TransferenciaResponse definirTratamientoFaltante(Long transferenciaId, Long detalleId,
                                                             TratamientoFaltante tratamiento) {
         Transferencia transferencia = cargarConDetalles(transferenciaId);

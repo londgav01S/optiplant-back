@@ -89,6 +89,13 @@ public class CompraController {
         return ResponseEntity.ok(ApiResponse.success("Orden de compra cancelada", response));
     }
 
+    @PreAuthorize("@authorizationService.canWriteCompra(authentication, #p0)")
+    @PostMapping("/{id}/cancelar")
+    public ResponseEntity<ApiResponse<OrdenCompraResponse>> cancelarCompat(@PathVariable Long id, Authentication auth) {
+        OrdenCompraResponse response = compraService.cancelar(id);
+        return ResponseEntity.ok(ApiResponse.success("Orden de compra cancelada", response));
+    }
+
     /**
      * POST /api/compras/{id}/recepcion
      * Confirmar la recepción de una orden de compra
@@ -102,6 +109,17 @@ public class CompraController {
     ) {
         Long usuarioId = getAuthUserId(auth);
         OrdenCompraResponse response = compraService.recepcionar(id, request, usuarioId);
+        return ResponseEntity.ok(ApiResponse.success("Recepción de compra confirmada", response));
+    }
+
+    @PreAuthorize("@authorizationService.canWriteCompra(authentication, #p0)")
+    @PostMapping("/{id}/recibir")
+    public ResponseEntity<ApiResponse<OrdenCompraResponse>> recibirCompat(
+        @PathVariable Long id,
+        Authentication auth
+    ) {
+        Long usuarioId = getAuthUserId(auth);
+        OrdenCompraResponse response = compraService.recepcionarCompleta(id, usuarioId);
         return ResponseEntity.ok(ApiResponse.success("Recepción de compra confirmada", response));
     }
 

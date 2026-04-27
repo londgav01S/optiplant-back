@@ -24,5 +24,11 @@ public interface TransferenciaService {
 
     TransferenciaResponse recepcionar(Long id, RecepcionTransferenciaRequest request, Long usuarioId);
 
+    TransferenciaResponse enviarCompat(Long id, Long usuarioId);
+
+    TransferenciaResponse recibirCompat(Long id, Long usuarioId);
+
+    TransferenciaResponse cancelarCompat(Long id);
+
     TransferenciaResponse definirTratamientoFaltante(Long transferenciaId, Long detalleId, TratamientoFaltante tratamiento);
 }

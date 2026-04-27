@@ -4,6 +4,8 @@ import com.consultores.optiplant.aptiplantback.dto.ApiResponse;
 import com.consultores.optiplant.aptiplantback.dto.request.AnulacionRequest;
 import com.consultores.optiplant.aptiplantback.dto.request.VentaRequest;
 import com.consultores.optiplant.aptiplantback.dto.response.VentaResponse;
+import com.consultores.optiplant.aptiplantback.enums.EstadoVenta;
+import com.consultores.optiplant.aptiplantback.exception.BusinessException;
 import com.consultores.optiplant.aptiplantback.repository.UsuarioRepository;
 import com.consultores.optiplant.aptiplantback.service.VentaService;
 import jakarta.validation.Valid;
@@ -71,6 +73,23 @@ public class VentaController {
             @PathVariable Long id,
             @Valid @RequestBody AnulacionRequest request) {
         VentaResponse data = ventaService.anular(id, request.motivo());
+        return ResponseEntity.ok(ApiResponse.success("Venta anulada", data));
+    }
+
+    @PreAuthorize("@authorizationService.canReadVenta(authentication, #id)")
+    @PostMapping("/{id}/confirmar")
+    public ResponseEntity<ApiResponse<VentaResponse>> confirmarCompat(@PathVariable Long id) {
+        VentaResponse data = ventaService.obtenerPorId(id);
+        if (data.estado() == EstadoVenta.ANULADA) {
+            throw new BusinessException("La venta está anulada y no se puede confirmar");
+        }
+        return ResponseEntity.ok(ApiResponse.success("Venta confirmada", data));
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN','GERENTE')")
+    @PostMapping("/{id}/cancelar")
+    public ResponseEntity<ApiResponse<VentaResponse>> cancelarCompat(@PathVariable Long id) {
+        VentaResponse data = ventaService.anular(id, "Cancelación solicitada desde frontend");
         return ResponseEntity.ok(ApiResponse.success("Venta anulada", data));
     }
 

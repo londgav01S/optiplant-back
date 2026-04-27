@@ -17,5 +17,7 @@ public interface CompraService {
     OrdenCompraResponse cancelar(Long id);
 
     OrdenCompraResponse recepcionar(Long id, RecepcionCompraRequest request, Long usuarioId);
+
+    OrdenCompraResponse recepcionarCompleta(Long id, Long usuarioId);
 }
 

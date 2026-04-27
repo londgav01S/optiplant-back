@@ -80,4 +80,11 @@ public class UsuarioController {
         UsuarioResponse data = usuarioService.desactivar(id);
         return ResponseEntity.ok(ApiResponse.success("Usuario desactivado", data));
     }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PatchMapping("/{id}/estado")
+    public ResponseEntity<ApiResponse<UsuarioResponse>> toggleEstadoCompat(@PathVariable Long id) {
+        UsuarioResponse data = usuarioService.desactivar(id);
+        return ResponseEntity.ok(ApiResponse.success("Estado de usuario actualizado", data));
+    }
 }

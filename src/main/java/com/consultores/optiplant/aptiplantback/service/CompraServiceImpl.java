@@ -184,6 +184,15 @@ public class CompraServiceImpl implements CompraService {
         return toResponse(ordenCompraRepository.save(orden));
     }
 
+    @Override
+    public OrdenCompraResponse recepcionarCompleta(Long id, Long usuarioId) {
+        OrdenCompra orden = ordenarConDetalles(id);
+        List<LineaRecepcionRequest> lineas = orden.getDetalles().stream()
+                .map(detalle -> new LineaRecepcionRequest(detalle.getId(), detalle.getCantidadPedida()))
+                .toList();
+        return recepcionar(id, new RecepcionCompraRequest(lineas), usuarioId);
+    }
+
     private OrdenCompra ordenarConDetalles(Long id) {
         return ordenCompraRepository.findByIdWithDetalles(id)
                 .orElseThrow(() -> new ResourceNotFoundException("OrdenCompra", id));

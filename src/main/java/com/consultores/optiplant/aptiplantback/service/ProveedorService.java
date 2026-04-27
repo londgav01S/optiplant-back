@@ -11,6 +11,8 @@ public interface ProveedorService {
 
     Proveedor crear(Proveedor proveedor);
 
+    Proveedor actualizar(Long id, Proveedor proveedor);
+
     Proveedor obtenerPorId(Long id);
 
     List<OrdenCompraResponse> historialCompras(Long proveedorId, LocalDate desde, LocalDate hasta);

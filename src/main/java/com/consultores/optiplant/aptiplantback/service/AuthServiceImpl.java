@@ -1,6 +1,7 @@
 package com.consultores.optiplant.aptiplantback.service;
 
 import com.consultores.optiplant.aptiplantback.dto.AuthResponse;
+import com.consultores.optiplant.aptiplantback.dto.AuthUserResponse;
 import com.consultores.optiplant.aptiplantback.dto.LoginRequest;
 import com.consultores.optiplant.aptiplantback.entity.Usuario;
 import com.consultores.optiplant.aptiplantback.exception.BusinessException;
@@ -48,10 +49,28 @@ public class AuthServiceImpl implements AuthService {
         claims.put("sucursalId", sucursalId);
 
         String token = jwtUtil.generateToken(usuario.getEmail(), claims);
-        return new AuthResponse(token, "Bearer", usuario.getEmail(), nombreCompleto(usuario));
+        return new AuthResponse(token, toAuthUser(usuario));
     }
 
-    private String nombreCompleto(Usuario usuario) {
-        return (usuario.getNombre() + " " + usuario.getApellido()).trim();
+    @Override
+    @Transactional(readOnly = true)
+    public AuthUserResponse getCurrentUser(String email) {
+        Usuario usuario = usuarioRepository.findByEmailAndActivoTrue(email)
+                .orElseThrow(() -> new BusinessException("Usuario autenticado no encontrado"));
+        return toAuthUser(usuario);
+    }
+
+    private AuthUserResponse toAuthUser(Usuario usuario) {
+        String nombreCompleto = (usuario.getNombre() + " " + usuario.getApellido()).trim();
+        Long sucursalId = usuario.getSucursal() != null ? usuario.getSucursal().getId() : null;
+        String sucursalNombre = usuario.getSucursal() != null ? usuario.getSucursal().getNombre() : null;
+        return new AuthUserResponse(
+                usuario.getId(),
+                nombreCompleto,
+                usuario.getEmail(),
+                usuario.getRol().getNombre().name(),
+                sucursalId,
+                sucursalNombre
+        );
     }
 }

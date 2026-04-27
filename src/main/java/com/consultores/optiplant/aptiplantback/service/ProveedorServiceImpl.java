@@ -49,6 +49,22 @@ public class ProveedorServiceImpl implements ProveedorService {
     }
 
     @Override
+    public Proveedor actualizar(Long id, Proveedor proveedor) {
+        if (proveedor == null) {
+            throw new BusinessException("El proveedor es obligatorio");
+        }
+
+        Proveedor actual = buscarProveedor(id);
+        actual.setNombre(validarTextoObligatorio(proveedor.getNombre(), "El nombre del proveedor es obligatorio"));
+        actual.setContacto(normalizarTexto(proveedor.getContacto()));
+        actual.setTelefono(normalizarTexto(proveedor.getTelefono()));
+        actual.setEmail(normalizarTexto(proveedor.getEmail()));
+        actual.setCondicionesPago(normalizarTexto(proveedor.getCondicionesPago()));
+
+        return proveedorRepository.save(actual);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Proveedor obtenerPorId(Long id) {
         return proveedorRepository.findById(id)

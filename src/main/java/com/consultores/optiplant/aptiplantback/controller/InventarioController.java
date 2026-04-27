@@ -1,6 +1,7 @@
 package com.consultores.optiplant.aptiplantback.controller;
 
 import com.consultores.optiplant.aptiplantback.dto.ApiResponse;
+import com.consultores.optiplant.aptiplantback.dto.request.InventarioAjusteRequest;
 import com.consultores.optiplant.aptiplantback.dto.request.InventarioConfigRequest;
 import com.consultores.optiplant.aptiplantback.dto.request.MovimientoRequest;
 import com.consultores.optiplant.aptiplantback.dto.response.InventarioResponse;
@@ -25,7 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestController
-@RequestMapping("/api/inventarios")
+@RequestMapping({"/api/inventarios", "/api/inventario"})
 public class InventarioController {
 
     private final InventarioService inventarioService;
@@ -92,6 +93,22 @@ public class InventarioController {
         MovimientoResponse data = inventarioService.registrarRetiro(
                 id, request.tipo(), request.cantidad(), request.motivo(), usuarioId);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("Retiro registrado", data));
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN','GERENTE','OPERADOR')")
+    @PostMapping("/ajuste")
+    public ResponseEntity<ApiResponse<MovimientoResponse>> ajustarStock(
+            @Valid @RequestBody InventarioAjusteRequest request,
+            Authentication auth) {
+        Long usuarioId = getAuthUserId(auth);
+        MovimientoResponse data = inventarioService.ajustarStock(
+                request.productoId(),
+                request.sucursalId(),
+                request.cantidad(),
+                request.motivo(),
+                usuarioId
+        );
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("Ajuste de stock aplicado", data));
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','GERENTE','OPERADOR')")

@@ -171,6 +171,39 @@ public class InventarioServiceImpl implements InventarioService {
     }
 
     @Override
+    public MovimientoResponse ajustarStock(Long productoId, Long sucursalId, BigDecimal cantidad,
+                                           String motivo, Long usuarioId) {
+        if (productoId == null || sucursalId == null) {
+            throw new BusinessException("Producto y sucursal son obligatorios para ajustar stock");
+        }
+        if (cantidad == null || cantidad.compareTo(BigDecimal.ZERO) == 0) {
+            throw new BusinessException("La cantidad del ajuste no puede ser cero");
+        }
+
+        Inventario inventario = inventarioRepository.findByProductoIdAndSucursalId(productoId, sucursalId)
+                .orElseThrow(() -> new ResourceNotFoundException("Inventario para producto y sucursal no encontrado"));
+
+        if (cantidad.compareTo(BigDecimal.ZERO) > 0) {
+            return registrarIngreso(
+                    inventario.getId(),
+                    TipoMovimiento.AJUSTE_POSITIVO,
+                    cantidad,
+                    motivo,
+                    inventario.getCostoPromedioPonderado(),
+                    usuarioId
+            );
+        }
+
+        return registrarRetiro(
+                inventario.getId(),
+                TipoMovimiento.AJUSTE_NEGATIVO,
+                cantidad.abs(),
+                motivo,
+                usuarioId
+        );
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Page<MovimientoResponse> historialMovimientos(Long inventarioId, int page, int size) {
         buscarInventario(inventarioId);
