@@ -69,7 +69,9 @@ public class ProductoServiceImpl implements ProductoService {
         producto.setActivo(true);
 
         Producto guardado = productoRepository.save(producto);
-        reemplazarUnidades(guardado, request.unidades());
+        if (request.unidades() != null && !request.unidades().isEmpty()) {
+            reemplazarUnidades(guardado, request.unidades());
+        }
 
         return toResponse(guardado);
     }
@@ -92,7 +94,9 @@ public class ProductoServiceImpl implements ProductoService {
         producto.setDescripcion(normalizarTexto(request.descripcion()));
 
         Producto guardado = productoRepository.save(producto);
-        reemplazarUnidades(guardado, request.unidades());
+        if (request.unidades() != null && !request.unidades().isEmpty()) {
+            reemplazarUnidades(guardado, request.unidades());
+        }
 
         return toResponse(guardado);
     }
