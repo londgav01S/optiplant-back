@@ -31,7 +31,7 @@ public class LogisticaServiceImpl implements LogisticaService {
 
     @Override
     public List<ReporteLogisticoResponse> reporte(Long sucursalOrigenId, Long sucursalDestinoId, LocalDate desde) {
-        LocalDateTime desdeDateTime = desde != null ? desde.atStartOfDay() : null;
+        LocalDateTime desdeDateTime = desde != null ? desde.atStartOfDay() : LocalDateTime.of(1970, 1, 1, 0, 0);
 
         return transferenciaRepository
                 .findCompletadasConDetalles(ESTADOS_COMPLETADOS, sucursalOrigenId, sucursalDestinoId, desdeDateTime)

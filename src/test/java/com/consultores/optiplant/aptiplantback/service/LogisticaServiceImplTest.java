@@ -63,7 +63,7 @@ class LogisticaServiceImplTest {
         DetalleTransferencia d = detalle(BigDecimal.TEN, BigDecimal.TEN, BigDecimal.ZERO);
         Transferencia t = transferencia(1L, EstadoTransferencia.RECIBIDA, List.of(d));
 
-        when(transferenciaRepository.findCompletadasConDetalles(any(), isNull(), isNull(), isNull()))
+        when(transferenciaRepository.findCompletadasConDetalles(any(), isNull(), isNull(), any()))
                 .thenReturn(List.of(t));
 
         List<ReporteLogisticoResponse> resultado = logisticaService.reporte(null, null, null);
@@ -79,7 +79,7 @@ class LogisticaServiceImplTest {
         DetalleTransferencia d = detalle(BigDecimal.TEN, BigDecimal.valueOf(6), BigDecimal.valueOf(4));
         Transferencia t = transferencia(2L, EstadoTransferencia.RECIBIDA_CON_FALTANTES, List.of(d));
 
-        when(transferenciaRepository.findCompletadasConDetalles(any(), isNull(), isNull(), isNull()))
+        when(transferenciaRepository.findCompletadasConDetalles(any(), isNull(), isNull(), any()))
                 .thenReturn(List.of(t));
 
         List<ReporteLogisticoResponse> resultado = logisticaService.reporte(null, null, null);
@@ -93,7 +93,7 @@ class LogisticaServiceImplTest {
         DetalleTransferencia d = detalle(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO);
         Transferencia t = transferencia(3L, EstadoTransferencia.RECIBIDA, List.of(d));
 
-        when(transferenciaRepository.findCompletadasConDetalles(any(), isNull(), isNull(), isNull()))
+        when(transferenciaRepository.findCompletadasConDetalles(any(), isNull(), isNull(), any()))
                 .thenReturn(List.of(t));
 
         List<ReporteLogisticoResponse> resultado = logisticaService.reporte(null, null, null);
@@ -103,7 +103,7 @@ class LogisticaServiceImplTest {
 
     @Test
     void debeRetornarListaVaciaCuandoNoHayTransferenciasCompletadas() {
-        when(transferenciaRepository.findCompletadasConDetalles(any(), isNull(), isNull(), isNull()))
+        when(transferenciaRepository.findCompletadasConDetalles(any(), isNull(), isNull(), any()))
                 .thenReturn(List.of());
 
         List<ReporteLogisticoResponse> resultado = logisticaService.reporte(null, null, null);

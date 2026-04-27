@@ -41,7 +41,7 @@ public interface TransferenciaRepository extends JpaRepository<Transferencia, Lo
            "WHERE t.estado IN :estados " +
            "AND (:origenId IS NULL OR t.sucursalOrigen.id = :origenId) " +
            "AND (:destinoId IS NULL OR t.sucursalDestino.id = :destinoId) " +
-           "AND (:desde IS NULL OR t.fechaSolicitud >= :desde) " +
+           "AND t.fechaSolicitud >= :desde " +
            "ORDER BY t.fechaSolicitud DESC")
     List<Transferencia> findCompletadasConDetalles(@Param("estados") Collection<EstadoTransferencia> estados,
                                                    @Param("origenId") Long origenId,

@@ -51,7 +51,9 @@ public class ProductoServiceImpl implements ProductoService {
             Math.max(1, size),
             Sort.by(Sort.Direction.ASC, "id")
         );
-        return productoRepository.findWithFilters(normalizarTexto(nombre), normalizarTexto(sku), pageable)
+        String nombreFiltro = (nombre == null || nombre.isBlank()) ? "%" : "%" + nombre.trim() + "%";
+        String skuFiltro    = (sku    == null || sku.isBlank())    ? "%" : "%" + sku.trim()    + "%";
+        return productoRepository.findWithFilters(nombreFiltro, skuFiltro, pageable)
             .map(this::toResponse);
     }
 

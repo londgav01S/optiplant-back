@@ -16,9 +16,7 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
 
     boolean existsBySkuAndIdNot(String sku, Long id);
 
-    @Query("SELECT p FROM Producto p WHERE " +
-           "(:nombre IS NULL OR lower(p.nombre) LIKE lower(concat('%', :nombre, '%'))) " +
-           "AND (:sku IS NULL OR lower(p.sku) LIKE lower(concat('%', :sku, '%')))")
+    @Query("SELECT p FROM Producto p WHERE lower(p.nombre) LIKE lower(:nombre) AND lower(p.sku) LIKE lower(:sku)")
     Page<Producto> findWithFilters(@Param("nombre") String nombre,
                                    @Param("sku") String sku,
                                    Pageable pageable);

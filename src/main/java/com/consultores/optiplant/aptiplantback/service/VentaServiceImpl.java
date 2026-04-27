@@ -76,8 +76,8 @@ public class VentaServiceImpl implements VentaService {
         }
         PageRequest pageable = PageRequest.of(Math.max(0, page), Math.max(1, size),
                 Sort.by(Sort.Direction.DESC, "fecha"));
-        LocalDateTime desdeDateTime = desde != null ? desde.atStartOfDay() : null;
-        LocalDateTime hastaDateTime = hasta != null ? hasta.atTime(23, 59, 59) : null;
+        LocalDateTime desdeDateTime = desde != null ? desde.atStartOfDay()     : LocalDateTime.of(1970, 1, 1, 0, 0);
+        LocalDateTime hastaDateTime = hasta != null ? hasta.atTime(23, 59, 59) : LocalDateTime.of(9999, 12, 31, 23, 59, 59);
         return ventaRepository.findWithFilters(sucursalId, desdeDateTime, hastaDateTime, pageable)
                 .map(this::toResponse);
     }

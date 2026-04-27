@@ -25,8 +25,7 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
 
     @Query("SELECT v FROM Venta v JOIN FETCH v.sucursal JOIN FETCH v.usuario LEFT JOIN FETCH v.listaPrecios WHERE " +
            "(:sucursalId IS NULL OR v.sucursal.id = :sucursalId) AND " +
-           "(:desde IS NULL OR v.fecha >= :desde) AND " +
-           "(:hasta IS NULL OR v.fecha <= :hasta)")
+           "v.fecha >= :desde AND v.fecha <= :hasta")
     org.springframework.data.domain.Page<Venta> findWithFilters(@Param("sucursalId") Long sucursalId,
                                                                 @Param("desde") LocalDateTime desde,
                                                                 @Param("hasta") LocalDateTime hasta,
