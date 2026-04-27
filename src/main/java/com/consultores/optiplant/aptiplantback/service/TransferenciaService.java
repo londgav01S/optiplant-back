@@ -12,17 +12,17 @@ public interface TransferenciaService {
 
     Page<TransferenciaResponse> listar(int page, int size, Long sucursalId, EstadoTransferencia estado);
 
-    TransferenciaResponse crear(TransferenciaRequest request);
+    TransferenciaResponse crear(TransferenciaRequest request, Long usuarioId);
 
     TransferenciaResponse obtenerPorId(Long id);
 
-    TransferenciaResponse aprobar(Long id);
+    TransferenciaResponse aprobar(Long id, Long usuarioId);
 
     TransferenciaResponse rechazar(Long id, String motivo);
 
-    TransferenciaResponse despachar(Long id, DespachoTransferenciaRequest request);
+    TransferenciaResponse despachar(Long id, DespachoTransferenciaRequest request, Long usuarioId);
 
-    TransferenciaResponse recepcionar(Long id, RecepcionTransferenciaRequest request);
+    TransferenciaResponse recepcionar(Long id, RecepcionTransferenciaRequest request, Long usuarioId);
 
     TransferenciaResponse definirTratamientoFaltante(Long transferenciaId, Long detalleId, TratamientoFaltante tratamiento);
 }

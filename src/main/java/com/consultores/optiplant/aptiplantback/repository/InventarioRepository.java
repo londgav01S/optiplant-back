@@ -28,4 +28,8 @@ public interface InventarioRepository extends JpaRepository<Inventario, Long> {
            "WHERE i.sucursal.id = :sucursalId " +
            "AND i.stockActual <= i.stockMinimo AND i.stockMinimo > 0")
     List<Inventario> findStockBajoEnSucursal(@Param("sucursalId") Long sucursalId);
+
+    @Query("SELECT COUNT(i) FROM Inventario i WHERE i.stockActual <= i.stockMinimo AND i.stockMinimo > 0 AND " +
+           "(:sucursalId IS NULL OR i.sucursal.id = :sucursalId)")
+    Long countBajoStockMinimo(@Param("sucursalId") Long sucursalId);
 }

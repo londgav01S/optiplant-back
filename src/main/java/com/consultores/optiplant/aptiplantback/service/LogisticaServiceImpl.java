@@ -2,15 +2,26 @@ package com.consultores.optiplant.aptiplantback.service;
 
 import com.consultores.optiplant.aptiplantback.dto.response.ReporteLogisticoResponse;
 import com.consultores.optiplant.aptiplantback.dto.response.TransferenciaResponse;
+import com.consultores.optiplant.aptiplantback.entity.DetalleTransferencia;
+import com.consultores.optiplant.aptiplantback.entity.Transferencia;
+import com.consultores.optiplant.aptiplantback.enums.EstadoTransferencia;
 import com.consultores.optiplant.aptiplantback.repository.TransferenciaRepository;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional(readOnly = true)
-public class LogisticaServiceImpl extends ServiceNotImplementedSupport implements LogisticaService {
+public class LogisticaServiceImpl implements LogisticaService {
+
+    private static final List<EstadoTransferencia> ESTADOS_COMPLETADOS = List.of(
+            EstadoTransferencia.RECIBIDA,
+            EstadoTransferencia.RECIBIDA_CON_FALTANTES
+    );
 
     private final TransferenciaRepository transferenciaRepository;
 
@@ -20,12 +31,71 @@ public class LogisticaServiceImpl extends ServiceNotImplementedSupport implement
 
     @Override
     public List<ReporteLogisticoResponse> reporte(Long sucursalOrigenId, Long sucursalDestinoId, LocalDate desde) {
-        throw notImplemented("LogisticaService.reporte");
+        LocalDateTime desdeDateTime = desde != null ? desde.atStartOfDay() : null;
+
+        return transferenciaRepository
+                .findCompletadasConDetalles(ESTADOS_COMPLETADOS, sucursalOrigenId, sucursalDestinoId, desdeDateTime)
+                .stream()
+                .map(this::toReporteResponse)
+                .toList();
     }
 
     @Override
     public List<TransferenciaResponse> enTransito() {
-        throw notImplemented("LogisticaService.enTransito");
+        return transferenciaRepository
+                .findByEstadoConAsociaciones(EstadoTransferencia.EN_TRANSITO)
+                .stream()
+                .map(this::toTransferenciaResponse)
+                .toList();
+    }
+
+    // --- Cálculo de métricas ---
+
+    private ReporteLogisticoResponse toReporteResponse(Transferencia t) {
+        List<DetalleTransferencia> detalles = t.getDetalles();
+
+        BigDecimal totalSolicitado = detalles.stream()
+                .map(DetalleTransferencia::getCantidadSolicitada)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal totalRecibido = detalles.stream()
+                .map(d -> d.getCantidadRecibida() != null ? d.getCantidadRecibida() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal faltanteTotal = detalles.stream()
+                .map(d -> d.getFaltante() != null ? d.getFaltante() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // porcentajeCumplimiento = (cantRecibida / cantSolicitada) * 100
+        BigDecimal porcentaje = totalSolicitado.compareTo(BigDecimal.ZERO) == 0
+                ? BigDecimal.ZERO
+                : totalRecibido
+                        .divide(totalSolicitado, 4, RoundingMode.HALF_UP)
+                        .multiply(BigDecimal.valueOf(100))
+                        .setScale(2, RoundingMode.HALF_UP);
+
+        return new ReporteLogisticoResponse(
+                t.getId(),
+                t.getEstado().name(),
+                porcentaje,
+                faltanteTotal.setScale(2, RoundingMode.HALF_UP));
+    }
+
+    private TransferenciaResponse toTransferenciaResponse(Transferencia t) {
+        return new TransferenciaResponse(
+                t.getId(),
+                t.getSucursalOrigen() != null ? t.getSucursalOrigen().getId() : null,
+                t.getSucursalDestino() != null ? t.getSucursalDestino().getId() : null,
+                t.getUsuarioSolicita() != null ? t.getUsuarioSolicita().getId() : null,
+                t.getUsuarioAprueba() != null ? t.getUsuarioAprueba().getId() : null,
+                t.getEstado(),
+                t.getUrgencia(),
+                t.getTransportista(),
+                t.getFechaSolicitud(),
+                t.getFechaDespacho(),
+                t.getFechaEstimadaLlegada(),
+                t.getFechaRecepcion(),
+                t.getMotivoRechazo(),
+                t.getObservaciones());
     }
 }
-

@@ -35,5 +35,10 @@ public interface OrdenCompraRepository extends JpaRepository<OrdenCompra, Long> 
     List<OrdenCompra> findByProveedorIdAndFechaCreacionBetweenOrderByFechaCreacionDesc(@Param("proveedorId") Long proveedorId,
                                                                                        @Param("desde") LocalDateTime desde,
                                                                                        @Param("hasta") LocalDateTime hasta);
+
+    @Query("SELECT COUNT(o) FROM OrdenCompra o WHERE o.estado = :estado AND " +
+           "(:sucursalId IS NULL OR o.sucursal.id = :sucursalId)")
+    Long countByEstadoAndSucursal(@Param("estado") EstadoOrdenCompra estado,
+                                   @Param("sucursalId") Long sucursalId);
 }
 

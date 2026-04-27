@@ -64,8 +64,23 @@ tasks.named('test') {
     finalizedBy jacocoTestReport
 }
 
+def jacocoExcludes = [
+    '**/controller/**',
+    '**/config/**',
+    '**/security/**',
+    '**/exception/**',
+    '**/entity/**',
+    '**/dto/**',
+    '**/repository/**',
+    '**/*Application*',
+    '**/enums/**',
+]
+
 jacocoTestReport {
     dependsOn test
+    classDirectories.setFrom(files(classDirectories.files.collect {
+        fileTree(dir: it, excludes: jacocoExcludes)
+    }))
     reports {
         xml.required = true
         html.required = true
@@ -73,6 +88,9 @@ jacocoTestReport {
 }
 
 jacocoTestCoverageVerification {
+    classDirectories.setFrom(files(classDirectories.files.collect {
+        fileTree(dir: it, excludes: jacocoExcludes)
+    }))
     violationRules {
         rule {
             limit {

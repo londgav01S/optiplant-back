@@ -158,14 +158,14 @@ class CompraServiceTest {
         orden.setId(1L);
         orden.setEstado(EstadoOrdenCompra.RECIBIDA); // Estado no PENDIENTE
 
-        when(ordenCompraRepository.findById(1L)).thenReturn(Optional.of(orden));
+        when(ordenCompraRepository.findByIdWithDetalles(1L)).thenReturn(Optional.of(orden));
 
         // Act & Assert
         BusinessException exception = assertThrows(BusinessException.class, () -> {
             compraService.cancelar(1L);
         });
 
-        assertEquals("Solo se pueden cancelar órdenes en estado PENDIENTE", exception.getMessage());
+        assertEquals("La orden debe estar en estado PENDIENTE", exception.getMessage());
         // Verificar que save NO fue llamado
         verify(ordenCompraRepository, never()).save(any());
     }
@@ -205,8 +205,10 @@ class CompraServiceTest {
         Inventario inventario = crearInventario(1L, producto, sucursal, BigDecimal.ZERO, BigDecimal.ZERO);
 
         when(ordenCompraRepository.findByIdWithDetalles(1L)).thenReturn(Optional.of(orden));
+        when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuario));
         when(inventarioRepository.findByProductoIdAndSucursalId(1L, 1L))
             .thenReturn(Optional.of(inventario));
+        when(ordenCompraRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         RecepcionCompraRequest request = new RecepcionCompraRequest(
             List.of(new LineaRecepcionRequest(1L, BigDecimal.TEN))
@@ -225,7 +227,7 @@ class CompraServiceTest {
             eq(TipoMovimiento.COMPRA),
             eq(BigDecimal.TEN),
             anyString(),
-            eq(BigDecimal.valueOf(100)),
+            argThat(bd -> ((BigDecimal) bd).compareTo(BigDecimal.valueOf(100)) == 0),
             eq(1L)
         );
 
@@ -270,8 +272,10 @@ class CompraServiceTest {
         Inventario inventario = crearInventario(1L, producto, sucursal, BigDecimal.ZERO, BigDecimal.ZERO);
 
         when(ordenCompraRepository.findByIdWithDetalles(1L)).thenReturn(Optional.of(orden));
+        when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuario));
         when(inventarioRepository.findByProductoIdAndSucursalId(1L, 1L))
             .thenReturn(Optional.of(inventario));
+        when(ordenCompraRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         RecepcionCompraRequest request = new RecepcionCompraRequest(
             List.of(new LineaRecepcionRequest(1L, BigDecimal.valueOf(6))) // Se reciben solo 6
@@ -290,7 +294,7 @@ class CompraServiceTest {
             eq(TipoMovimiento.COMPRA),
             eq(BigDecimal.valueOf(6)),
             anyString(),
-            eq(BigDecimal.valueOf(100)),
+            argThat(bd -> ((BigDecimal) bd).compareTo(BigDecimal.valueOf(100)) == 0),
             eq(1L)
         );
 
