@@ -7,6 +7,9 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * DTO para la solicitud de orden de compra.
+ */
 public record OrdenCompraRequest(
     @NotNull Long idProveedor,
     @NotNull Long idSucursal,

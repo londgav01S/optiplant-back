@@ -17,6 +17,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+/*
+ * Controlador que expone endpoints para obtener información del dashboard.
+ * Ofrece vistas por sucursal y globales, además de métricas y listados de
+ * productos con bajo stock. Toda la agregación se realiza en DashboardService
+ * y en consultas específicas del repositorio de inventario.
+ */
 @RestController
 @RequestMapping("/api/dashboard")
 public class DashboardController {
@@ -29,6 +35,10 @@ public class DashboardController {
         this.inventarioRepository = inventarioRepository;
     }
 
+    /**
+     * Obtiene el dashboard (métricas y resúmenes) para una sucursal específica.
+     * Autorizado para roles ADMIN y GERENTE.
+     */
     @PreAuthorize("hasAnyRole('ADMIN','GERENTE')")
     @GetMapping("/sucursal/{sucursalId}")
     public ResponseEntity<ApiResponse<DashboardResponse>> dashboardSucursal(@PathVariable Long sucursalId) {
@@ -36,6 +46,9 @@ public class DashboardController {
         return ResponseEntity.ok(ApiResponse.success("Dashboard de sucursal obtenido", data));
     }
 
+    /**
+     * Obtiene el dashboard global (agregado de todas las sucursales).
+     */
     @PreAuthorize("hasAnyRole('ADMIN','GERENTE')")
     @GetMapping("/global")
     public ResponseEntity<ApiResponse<DashboardResponse>> dashboardGlobal() {
@@ -43,6 +56,13 @@ public class DashboardController {
         return ResponseEntity.ok(ApiResponse.success("Dashboard global obtenido", data));
     }
 
+    /**
+     * Devuelve métricas preparadas para consumo por el frontend (gráficos y resúmenes).
+     * Si se pasa {@code sucursalId} se devuelven métricas específicas, de lo contrario
+     * se devuelven métricas globales.
+     *
+     * @param sucursalId (opcional) id de sucursal para métricas por sucursal.
+     */
     @PreAuthorize("hasAnyRole('ADMIN','GERENTE')")
     @GetMapping("/metricas")
     public ResponseEntity<ApiResponse<DashboardMetricasResponse>> metricas(
@@ -51,12 +71,14 @@ public class DashboardController {
                 ? dashboardService.dashboardSucursal(sucursalId)
                 : dashboardService.dashboardGlobal();
 
+        // Transformar ventas mensuales a un formato con meses abreviados.
         List<DashboardVentaMensualChartResponse> ventasMensuales = source.ventasMensuales() == null
                 ? List.of()
                 : source.ventasMensuales().stream()
                         .map(v -> new DashboardVentaMensualChartResponse(mesAbreviado(v.mes()), v.total()))
                         .toList();
 
+        // Obtener lista de productos bajo stock (limitada para vista global)
         List<DashboardProductoBajoStockResponse> productosBajoStock = obtenerProductosBajoStock(sucursalId);
 
         DashboardMetricasResponse data = new DashboardMetricasResponse(
@@ -72,6 +94,10 @@ public class DashboardController {
         return ResponseEntity.ok(ApiResponse.success("Métricas de dashboard obtenidas", data));
     }
 
+    /**
+     * Recupera una lista de productos que están bajo el stock mínimo. Para vista
+     * global se limita a 20 elementos para evitar payloads excesivos.
+     */
     private List<DashboardProductoBajoStockResponse> obtenerProductosBajoStock(Long sucursalId) {
         if (sucursalId == null) {
             return inventarioRepository.findStockBajoGlobal().stream()
@@ -84,6 +110,10 @@ public class DashboardController {
                 .toList();
     }
 
+    /**
+     * Convierte la entidad de inventario a la respuesta simplificada usada en el
+     * dashboard (nombre, sucursal y valores de stock).
+     */
     private DashboardProductoBajoStockResponse toProductoBajoStock(Inventario inventario) {
         return new DashboardProductoBajoStockResponse(
                 inventario.getProducto().getNombre(),
@@ -94,6 +124,10 @@ public class DashboardController {
         );
     }
 
+    /**
+     * Retorna una abreviatura de mes (español) dada la representación numérica.
+     * Devuelve "N/A" si el número de mes está fuera del rango 1-12.
+     */
     private String mesAbreviado(int mes) {
         return switch (mes) {
             case 1 -> "Ene";

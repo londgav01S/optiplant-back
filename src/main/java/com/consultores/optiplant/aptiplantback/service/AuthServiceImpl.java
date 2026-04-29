@@ -13,6 +13,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Implementación del servicio de autenticación.
+ */
 @Service
 public class AuthServiceImpl implements AuthService {
 
@@ -20,6 +23,12 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
+    /**
+     * Constructor de la clase.
+     * @param usuarioRepository Repositorio para acceder a los datos de usuarios.
+     * @param passwordEncoder Codificador de contraseñas.   
+     * @param jwtUtil Utilidad para generar y validar tokens JWT.
+     */
     public AuthServiceImpl(
         UsuarioRepository usuarioRepository,
         PasswordEncoder passwordEncoder,
@@ -30,6 +39,12 @@ public class AuthServiceImpl implements AuthService {
         this.jwtUtil = jwtUtil;
     }
 
+    /**
+     * Realiza el inicio de sesión de un usuario.
+     * @param loginRequest Datos de inicio de sesión (email y contraseña).
+     * @return Respuesta con el token JWT y la información del usuario autenticado.
+     * @throws BusinessException Si las credenciales son inválidas.
+     */
     @Override
     @Transactional(readOnly = true)
     public AuthResponse login(LoginRequest loginRequest) {
@@ -52,6 +67,7 @@ public class AuthServiceImpl implements AuthService {
         return new AuthResponse(token, toAuthUser(usuario));
     }
 
+    
     @Override
     @Transactional(readOnly = true)
     public AuthUserResponse getCurrentUser(String email) {

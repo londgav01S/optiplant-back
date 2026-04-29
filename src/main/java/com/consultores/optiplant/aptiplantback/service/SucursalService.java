@@ -3,6 +3,9 @@ package com.consultores.optiplant.aptiplantback.service;
 import com.consultores.optiplant.aptiplantback.dto.response.SucursalResponse;
 import java.util.List;
 
+/*
+* Contrato de negocio para la gestión de sucursales, incluyendo creación, actualización, listado y desactivación de sucursales.
+**/
 public interface SucursalService {
 
     List<SucursalResponse> listarActivas();

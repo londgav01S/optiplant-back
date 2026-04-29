@@ -2,6 +2,11 @@ package com.consultores.optiplant.aptiplantback.dto;
 
 import java.time.LocalDateTime;
 
+/**
+ * DTO genérico para respuestas de API, que incluye un indicador de éxito, un mensaje, datos opcionales y una marca de tiempo.
+ *
+ * @param <T> El tipo de los datos incluidos en la respuesta.
+ */
 public record ApiResponse<T>(
     boolean success,
     String message,

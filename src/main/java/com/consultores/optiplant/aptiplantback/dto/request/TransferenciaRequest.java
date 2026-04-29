@@ -6,6 +6,9 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
+/**
+ * DTO para la solicitud de transferencia.
+ */
 public record TransferenciaRequest(
     @NotNull Long idSucursalOrigen,
     @NotNull Long idSucursalDestino,

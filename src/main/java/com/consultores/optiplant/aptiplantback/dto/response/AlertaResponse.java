@@ -4,6 +4,9 @@ import com.consultores.optiplant.aptiplantback.enums.TipoAlerta;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+/**
+ * DTO para la respuesta de una alerta de stock.
+ */
 public record AlertaResponse(
     Long id,
     Long inventarioId,

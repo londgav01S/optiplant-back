@@ -33,6 +33,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Implementación del servicio de transferencias.
+ */
 @Service
 @Transactional
 public class TransferenciaServiceImpl implements TransferenciaService {
@@ -61,6 +64,14 @@ public class TransferenciaServiceImpl implements TransferenciaService {
         this.inventarioService = inventarioService;
     }
 
+    /**
+     * Lista las transferencias con filtros opcionales.
+     * @param page
+     * @param size
+     * @param sucursalId
+     * @param estado
+     * @return Page<TransferenciaResponse> con las transferencias que cumplen los filtros, paginadas y ordenadas por fecha de solicitud descendente.
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<TransferenciaResponse> listar(int page, int size, Long sucursalId, EstadoTransferencia estado) {
@@ -70,6 +81,12 @@ public class TransferenciaServiceImpl implements TransferenciaService {
                 .map(this::toResponse);
     }
 
+    /**
+     * Crea una nueva transferencia.
+     * @param request
+     * @param usuarioId
+     * @return TransferenciaResponse con la transferencia creada.
+     */
     @Override
     public TransferenciaResponse crear(TransferenciaRequest request, Long usuarioId) {
         // Guard: sucursales distintas
@@ -109,12 +126,23 @@ public class TransferenciaServiceImpl implements TransferenciaService {
         return toResponse(guardada);
     }
 
+    /**
+     * Obtiene una transferencia por su ID.
+     * @param id
+     * @return TransferenciaResponse con la transferencia encontrada.
+     */
     @Override
     @Transactional(readOnly = true)
     public TransferenciaResponse obtenerPorId(Long id) {
         return toResponse(cargarConDetalles(id));
     }
 
+    /**
+     * Aproba una transferencia.
+     * @param id
+     * @param usuarioId
+     * @return TransferenciaResponse con la transferencia aprobada.
+     */
     @Override
     public TransferenciaResponse aprobar(Long id, Long usuarioId) {
         Transferencia transferencia = cargarConDetalles(id);
@@ -128,6 +156,12 @@ public class TransferenciaServiceImpl implements TransferenciaService {
         return toResponse(transferenciaRepository.save(transferencia));
     }
 
+    /**
+     * Rechaza una transferencia.
+     * @param id
+     * @param motivo
+
+     */
     @Override
     public TransferenciaResponse rechazar(Long id, String motivo) {
         Transferencia transferencia = cargarConDetalles(id);
@@ -144,6 +178,13 @@ public class TransferenciaServiceImpl implements TransferenciaService {
         return toResponse(transferenciaRepository.save(transferencia));
     }
 
+    /**
+     * Despacha una transferencia.
+     * @param id
+     * @param request
+     * @param usuarioId
+     * @return TransferenciaResponse con la transferencia despachada.
+     */
     @Override
     public TransferenciaResponse despachar(Long id, DespachoTransferenciaRequest request, Long usuarioId) {
         Transferencia transferencia = cargarConDetalles(id);
@@ -183,6 +224,13 @@ public class TransferenciaServiceImpl implements TransferenciaService {
         return toResponse(transferenciaRepository.save(transferencia));
     }
 
+    /**
+     * Recepciona una transferencia.
+     * @param id
+     * @param request
+     * @param usuarioId
+     * @return TransferenciaResponse con la transferencia recibida.
+    */
     @Override
     public TransferenciaResponse recepcionar(Long id, RecepcionTransferenciaRequest request, Long usuarioId) {
         Transferencia transferencia = cargarConDetalles(id);
@@ -236,6 +284,12 @@ public class TransferenciaServiceImpl implements TransferenciaService {
         return toResponse(transferenciaRepository.save(transferencia));
     }
 
+    /**
+     * Envia una transferencia.
+     * @param id
+     * @param usuarioId
+     * @return TransferenciaResponse con la transferencia enviada.
+     */
     @Override
     public TransferenciaResponse enviarCompat(Long id, Long usuarioId) {
         Transferencia transferencia = cargarConDetalles(id);
@@ -257,6 +311,12 @@ public class TransferenciaServiceImpl implements TransferenciaService {
         return despachar(id, request, usuarioId);
     }
 
+    /**
+     * Recibe una transferencia.
+     * @param id
+     * @param usuarioId
+     * @return TransferenciaResponse con la transferencia recibida.
+     */
     @Override
     public TransferenciaResponse recibirCompat(Long id, Long usuarioId) {
         Transferencia transferencia = cargarConDetalles(id);
@@ -276,11 +336,23 @@ public class TransferenciaServiceImpl implements TransferenciaService {
         return recepcionar(id, request, usuarioId);
     }
 
+    /**
+     * Cancela una transferencia en estado compatible.
+     * @param id
+     * @return TransferenciaResponse con la transferencia cancelada.
+     */
     @Override
     public TransferenciaResponse cancelarCompat(Long id) {
         return rechazar(id, "Cancelación solicitada desde frontend");
     }
 
+    /**
+     * Define el tratamiento para un faltante en una transferencia recibida con faltantes.
+     * @param transferenciaId
+     * @param detalleId
+     * @param tratamiento
+     * @return TransferenciaResponse con la transferencia actualizada.
+     */
     @Override
     public TransferenciaResponse definirTratamientoFaltante(Long transferenciaId, Long detalleId,
                                                             TratamientoFaltante tratamiento) {
@@ -309,6 +381,12 @@ public class TransferenciaServiceImpl implements TransferenciaService {
 
     // --- Helpers privados ---
 
+    /**
+     * Valida que haya stock suficiente en la sucursal origen para cada producto solicitado en la transferencia.
+     * @param checks
+     * @param sucursalId
+     * 
+     */
     private void validarStockEnOrigen(List<StockCheck> checks, Long sucursalId) {
         for (StockCheck check : checks) {
             Inventario inv = inventarioRepository
@@ -323,6 +401,12 @@ public class TransferenciaServiceImpl implements TransferenciaService {
         }
     }
 
+
+    /**
+     * Crea una transferencia de reenvío para un faltante detectado en una transferencia recibida con faltantes.
+     * @param original
+     * @param detalleFaltante
+     */
     private void crearTransferenciaReenvio(Transferencia original, DetalleTransferencia detalleFaltante) {
         Transferencia reenvio = new Transferencia();
         reenvio.setSucursalOrigen(original.getSucursalOrigen());
@@ -342,6 +426,12 @@ public class TransferenciaServiceImpl implements TransferenciaService {
         detalleRepository.save(detalleReenvio);
     }
 
+    /**
+     * Obtiene o inicializa un inventario para un producto en una sucursal.
+     * @param producto
+     * @param sucursal
+     * @return Inventario existente o nuevo para el producto en la sucursal.
+     */
     private Inventario obtenerOInicializarInventario(Producto producto, Sucursal sucursal) {
         return inventarioRepository
                 .findByProductoIdAndSucursalId(producto.getId(), sucursal.getId())
@@ -357,6 +447,12 @@ public class TransferenciaServiceImpl implements TransferenciaService {
                 });
     }
 
+    /**
+     * Busca un detalle en una transferencia.
+     * @param transferencia
+     * @param detalleId
+     * @return DetalleTransferencia encontrado.
+     */
     private DetalleTransferencia buscarDetalleEnTransferencia(Transferencia transferencia, Long detalleId) {
         return transferencia.getDetalles().stream()
                 .filter(d -> d.getId().equals(detalleId))
@@ -365,32 +461,63 @@ public class TransferenciaServiceImpl implements TransferenciaService {
                         "Detalle " + detalleId + " no pertenece a la transferencia " + transferencia.getId()));
     }
 
+    /**
+     * Carga una transferencia con detalles.
+     * @param id
+     * @return com.consultores.optiplant.aptiplantback.entity.Transferencia con los detalles.
+     */
     private Transferencia cargarConDetalles(Long id) {
         return transferenciaRepository.findByIdWithDetalles(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Transferencia", id));
     }
 
+    /**
+     * Busca una sucursal por su ID.
+     * @param id
+     * @return Sucursal encontrada.
+     */
     private Sucursal buscarSucursal(Long id) {
         return sucursalRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Sucursal", id));
     }
 
+    /**
+     * Busca un usuario por su ID.
+     * @param id
+     * @return Usuario encontrado.
+     */
     private Usuario buscarUsuario(Long id) {
         return usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario", id));
     }
 
+    /**
+     * Busca un producto por su ID.
+     * @param id
+     * @return Producto encontrado.
+     */
     private Producto buscarProducto(Long id) {
         return productoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Producto", id));
     }
 
+    /**
+     * Busca un inventario para un producto en una sucursal.
+     * @param productoId
+     * @param sucursalId
+     * @return Inventario encontrado.
+     */
     private Inventario buscarInventario(Long productoId, Long sucursalId) {
         return inventarioRepository.findByProductoIdAndSucursalId(productoId, sucursalId)
                 .orElseThrow(() -> new BusinessException(
                         "No existe inventario para el producto " + productoId + " en la sucursal " + sucursalId));
     }
 
+    /**
+     * Convierte una transferencia en una respuesta.
+     * @param t
+     * @return TransferenciaResponse con los datos de la transferencia.
+     */
     private TransferenciaResponse toResponse(Transferencia t) {
         return new TransferenciaResponse(
                 t.getId(),

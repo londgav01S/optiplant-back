@@ -14,6 +14,9 @@ import java.time.LocalDate;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * Entidad que representa un precio de un producto en una lista de precios.
+ */
 @Getter
 @Setter
 @Entity

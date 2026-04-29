@@ -12,6 +12,9 @@ import java.util.Set;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * Entidad que representa un producto en el sistema.
+ */
 @Getter
 @Setter
 @Entity

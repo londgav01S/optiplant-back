@@ -39,6 +39,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Implementación del servicio de compras.
+ */
 @Service
 @Transactional
 public class CompraServiceImpl implements CompraService {
@@ -52,6 +55,17 @@ public class CompraServiceImpl implements CompraService {
     private final InventarioRepository inventarioRepository;
     private final InventarioService inventarioService;
 
+    /**
+     * Constructor del servicio de compras.
+     * @param ordenCompraRepository
+     * @param detalleOrdenCompraRepository
+     * @param proveedorRepository
+     * @param sucursalRepository
+     * @param usuarioRepository
+     * @param productoRepository
+     * @param inventarioRepository
+     * @param inventarioService
+     */
     public CompraServiceImpl(
         OrdenCompraRepository ordenCompraRepository,
         DetalleOrdenCompraRepository detalleOrdenCompraRepository,
@@ -72,6 +86,17 @@ public class CompraServiceImpl implements CompraService {
         this.inventarioService = inventarioService;
     }
 
+    /**
+     * Lista las órdenes de compra con filtros opcionales.
+     * @param page
+     * @param size
+     * @param sucursalId
+     * @param proveedorId
+     * @param estado
+     * @return Page<OrdenCompraResponse> con las órdenes de compra que cumplen los filtros, paginadas y ordenadas por fecha de creación descendente.
+     * @throws BusinessException si el número de página o tamaño es inválido.
+      * Si no se proporcionan filtros, devuelve todas las órdenes de compra paginadas.
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<OrdenCompraResponse> listar(int page, int size, Long sucursalId, Long proveedorId, EstadoOrdenCompra estado) {
@@ -84,6 +109,12 @@ public class CompraServiceImpl implements CompraService {
                 .map(this::toResponse);
     }
 
+    /**
+     * Crea una nueva orden de compra.
+     * @param request con los datos de la orden de compra a crear, incluyendo el ID del proveedor, sucursal, fecha estimada de entrega, plazo de pago y las líneas de la orden con producto, cantidad, precio y descuento.
+     * @param usuarioId
+     * @return OrdenCompraResponse con la orden de compra creada.
+     */
     @Override
     public OrdenCompraResponse crear(OrdenCompraRequest request, Long usuarioId) {
         Usuario usuario = buscarUsuario(usuarioId);
@@ -109,6 +140,12 @@ public class CompraServiceImpl implements CompraService {
         return toResponse(guardada);
     }
 
+
+    /**
+     * Obtiene una orden de compra por su ID.
+     * @param id
+     * @return OrdenCompraResponse con la orden de compra encontrada.
+     */
     @Override
     @Transactional(readOnly = true)
     public OrdenCompraResponse obtenerPorId(Long id) {
@@ -117,6 +154,12 @@ public class CompraServiceImpl implements CompraService {
         return toResponse(orden);
     }
 
+
+    /**
+     * Cancela una orden de compra por su ID.
+     * @param id
+     * @return OrdenCompraResponse con la orden de compra cancelada.
+     */
     @Override
     public OrdenCompraResponse cancelar(Long id) {
         OrdenCompra orden = ordenarConDetalles(id);
@@ -126,6 +169,11 @@ public class CompraServiceImpl implements CompraService {
         return toResponse(ordenCompraRepository.save(orden));
     }
 
+    /**
+     * Recepciona una orden de compra por su ID.
+     * @param id
+     * @param request con las líneas de recepción, indicando el ID del detalle de la orden y la cantidad recibida para cada línea.
+     */
     @Override
     public OrdenCompraResponse recepcionar(Long id, RecepcionCompraRequest request, Long usuarioId) {
         OrdenCompra orden = ordenarConDetalles(id);
@@ -185,6 +233,11 @@ public class CompraServiceImpl implements CompraService {
         return toResponse(ordenCompraRepository.save(orden));
     }
 
+    /**
+     * Lista las órdenes de compra que están pendientes de recepción para una sucursal específica.
+     * @param sucursalId
+     * @return Page<OrdenCompraResponse> con las órdenes de compra pendientes de recepción para la sucursal
+     */
     @Override
     public OrdenCompraResponse recepcionarCompleta(Long id, Long usuarioId) {
         OrdenCompra orden = ordenarConDetalles(id);
@@ -194,26 +247,52 @@ public class CompraServiceImpl implements CompraService {
         return recepcionar(id, new RecepcionCompraRequest(lineas), usuarioId);
     }
 
+    /**
+     * Busca una orden de compra por su ID con detalles.
+     * @param id
+     * @return OrdenCompra con los detalles de la orden de compra
+     */
     private OrdenCompra ordenarConDetalles(Long id) {
         return ordenCompraRepository.findByIdWithDetalles(id)
                 .orElseThrow(() -> new ResourceNotFoundException("OrdenCompra", id));
     }
 
+    /**
+     * Busca un usuario por su ID.
+     * @param id
+     * @return Usuario encontrado o excepción si no se encuentra.
+     */
     private Usuario buscarUsuario(Long id) {
         return usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario", id));
     }
 
+    /**
+     * Busca un proveedor por su ID.
+     * @param id
+     * @return Proveedor encontrado o excepción si no se encuentra.
+     */
     private Proveedor buscarProveedor(Long id) {
         return proveedorRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Proveedor", id));
     }
 
+    /**
+     * Busca una sucursal por su ID.
+     * @param id
+     * @return Sucursal encontrada o excepción si no se encuentra.
+     */
     private Sucursal buscarSucursal(Long id) {
         return sucursalRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Sucursal", id));
     }
 
+    /**
+     * Crea un nuevo detalle de la orden de compra.
+     * @param orden
+     * @param linea
+     * @return DetalleOrdenCompra con los datos del detalle de la orden de compra
+     */
     private DetalleOrdenCompra crearDetalle(OrdenCompra orden, LineaOrdenRequest linea) {
         Producto producto = productoRepository.findById(linea.idProducto())
                 .orElseThrow(() -> new ResourceNotFoundException("Producto", linea.idProducto()));
@@ -238,6 +317,11 @@ public class CompraServiceImpl implements CompraService {
         return detalle;
     }
 
+    /**
+     * Calcula el total de la orden de compra.
+     * @param detalles
+     * @return BigDecimal con el total de la orden de compra
+     */
     private BigDecimal calcularTotal(List<DetalleOrdenCompra> detalles) {
         return detalles.stream()
                 .map(DetalleOrdenCompra::getSubtotal)
@@ -245,12 +329,24 @@ public class CompraServiceImpl implements CompraService {
                 .setScale(2, RoundingMode.HALF_UP);
     }
 
+    /**
+     * Valida que la orden de compra esté en estado PENDIENTE.
+     * @param orden
+     * @throws BusinessException si la orden no está en estado PENDIENTE.
+     */
     private void validarEstadoPendiente(OrdenCompra orden) {
         if (orden.getEstado() != EstadoOrdenCompra.PENDIENTE) {
             throw new BusinessException("La orden debe estar en estado PENDIENTE");
         }
     }
 
+
+    /**
+     * Crea un nuevo inventario para un producto y sucursal específicos con stock inicial cero. Se utiliza cuando se recepciona una orden de compra y no existe un inventario previo para ese producto en la sucursal.
+     * @param producto
+     * @param sucursal
+     * @return Inventario creado con stock actual cero, stock mínimo cero y costo promedio ponderado cero.
+     */
     private Inventario crearInventario(Producto producto, Sucursal sucursal) {
         Inventario inventario = new Inventario();
         inventario.setProducto(producto);
@@ -261,6 +357,11 @@ public class CompraServiceImpl implements CompraService {
         return inventarioRepository.save(inventario);
     }
 
+    /**
+     * Calcula el total de ventas del mes para una sucursal específica. Si no hay ventas, devuelve cero.
+     * @param orden
+     * @return BigDecimal con el total de ventas del mes para la sucursal, o cero si no hay ventas.
+     */
     private OrdenCompraResponse toResponse(OrdenCompra orden) {
         List<DetalleOrdenCompraResponse> detalles = orden.getDetalles().stream()
                 .map(d -> new DetalleOrdenCompraResponse(
@@ -297,6 +398,7 @@ public class CompraServiceImpl implements CompraService {
         );
     }
 
+    
     private record DetalleRecepcion(Long idDetalle, BigDecimal cantidadRecibida) {
     }
 }

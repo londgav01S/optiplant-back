@@ -29,6 +29,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Implementación del servicio de productos, con validaciones de negocio y manejo de excepciones.
+ */
 @Service
 @Transactional
 public class ProductoServiceImpl implements ProductoService {
@@ -61,6 +64,14 @@ public class ProductoServiceImpl implements ProductoService {
         this.sucursalRepository = sucursalRepository;
     }
 
+    /**
+     * Lista los productos con filtros opcionales.
+     * @param page
+     * @param size
+     * @param nombre
+     * @param sku
+     * @return Page<ProductoResponse> con los productos listados
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<ProductoResponse> listar(int page, int size, String nombre, String sku) {
@@ -75,6 +86,11 @@ public class ProductoServiceImpl implements ProductoService {
             .map(this::toResponse);
     }
 
+    /**
+     * Crea un nuevo producto.
+     * @param request
+     * @return ProductoResponse con el producto creado
+     */
     @Override
     public ProductoResponse crear(ProductoRequest request) {
         String sku = normalizarTextoObligatorio(request.sku(), "El SKU es obligatorio");
@@ -96,12 +112,23 @@ public class ProductoServiceImpl implements ProductoService {
         return toResponse(guardado);
     }
 
+    /**
+     * Obtiene un producto por su ID.
+     * @param id
+     * @return ProductoResponse con el producto encontrado
+     */
     @Override
     @Transactional(readOnly = true)
     public ProductoResponse obtenerPorId(Long id) {
         return toResponse(buscarProducto(id));
     }
 
+    /**
+     * Actualiza un producto existente.
+     * @param id
+     * @param request
+     * @return ProductoResponse con el producto actualizado
+     */
     @Override
     public ProductoResponse actualizar(Long id, ProductoRequest request) {
         Producto producto = buscarProducto(id);
@@ -122,6 +149,11 @@ public class ProductoServiceImpl implements ProductoService {
         return toResponse(guardado);
     }
 
+    /**
+     * Desactiva un producto existente.
+     * @param id
+     * @return ProductoResponse con el producto desactivado
+     */
     @Override
     public ProductoResponse desactivar(Long id) {
         Producto producto = buscarProducto(id);
@@ -134,11 +166,22 @@ public class ProductoServiceImpl implements ProductoService {
         return toResponse(productoRepository.save(producto));
     }
 
+    /**
+     * Busca un producto por su ID.
+     * @param id
+     * @return Producto encontrado o excepción si no se encuentra
+     */
     private Producto buscarProducto(Long id) {
         return productoRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Producto", id));
     }
 
+    /**
+     * Valida que el SKU del producto sea único.
+     * @param sku
+     * @param idActual
+     * 
+     */
     private void validarSkuUnico(String sku, Long idActual) {
         boolean existe = idActual == null
             ? productoRepository.existsBySku(sku)
@@ -149,6 +192,11 @@ public class ProductoServiceImpl implements ProductoService {
         }
     }
 
+    /**
+     * Reemplaza las unidades de un producto existente.
+     * @param producto
+     * @param unidadesRequest
+     */
     private void reemplazarUnidades(Producto producto, List<ProductoUnidadRequest> unidadesRequest) {
         validarUnidades(unidadesRequest);
 
@@ -163,6 +211,12 @@ public class ProductoServiceImpl implements ProductoService {
         productoUnidadRepository.saveAll(nuevasUnidades);
     }
 
+    /**
+     * Crea una nueva unidad de medida para un producto.
+     * @param producto
+     * @param request
+     * @return ProductoUnidad creada a partir del request
+     */
     private ProductoUnidad crearProductoUnidad(Producto producto, ProductoUnidadRequest request) {
         UnidadMedida unidad = unidadMedidaRepository.findById(request.idUnidad())
             .orElseThrow(() -> new ResourceNotFoundException("UnidadMedida", request.idUnidad()));
@@ -175,6 +229,10 @@ public class ProductoServiceImpl implements ProductoService {
         return productoUnidad;
     }
 
+    /**
+     * Valida las unidades de medida para un producto, asegurando que haya exactamente una unidad principal y que no se repitan unidades de medida.
+     * @param unidades
+     */
     private void validarUnidades(List<ProductoUnidadRequest> unidades) {
         if (unidades == null || unidades.isEmpty()) {
             throw new BusinessException("El producto debe tener al menos una unidad");
@@ -195,6 +253,12 @@ public class ProductoServiceImpl implements ProductoService {
         }
     }
 
+    /**
+     * Normaliza un texto obligatorio.
+     * @param valor
+     * @param mensajeError
+     * @return String normalizado
+     */
     private String normalizarTextoObligatorio(String valor, String mensajeError) {
         if (valor == null || valor.trim().isEmpty()) {
             throw new BusinessException(mensajeError);
@@ -202,6 +266,11 @@ public class ProductoServiceImpl implements ProductoService {
         return valor.trim();
     }
 
+    /**
+     * Normaliza un texto.
+     * @param valor
+     * @return String normalizado o null si es null o vacío
+     */
     private String normalizarTexto(String valor) {
         if (valor == null) {
             return null;
@@ -210,6 +279,10 @@ public class ProductoServiceImpl implements ProductoService {
         return normalizado.isEmpty() ? null : normalizado;
     }
 
+    /*
+     * Inicializa el inventario para un producto en todas las sucursales activas.
+     * @param producto
+     */
     private void inicializarInventarioEnSucursales(Producto producto) {
         for (Sucursal sucursal : sucursalRepository.findByActivoTrue()) {
             boolean yaExiste = inventarioRepository
@@ -224,6 +297,11 @@ public class ProductoServiceImpl implements ProductoService {
         }
     }
 
+    /**
+     * Guarda el precio base de un producto.
+     * @param producto
+     * @param precio
+     */
     private void guardarPrecioBase(Producto producto, BigDecimal precio) {
         if (precio == null) {
             return;
@@ -243,6 +321,11 @@ public class ProductoServiceImpl implements ProductoService {
         precioProductoRepository.save(pp);
     }
 
+    /**
+     * Convierte un producto a un ProductoResponse.
+     * @param producto
+     * @return ProductoResponse con los datos del producto
+     */
     private ProductoResponse toResponse(Producto producto) {
         BigDecimal precioBase = precioProductoRepository
             .findFirstByProductoIdAndListaNombre(producto.getId(), LISTA_PRECIO_BASE)

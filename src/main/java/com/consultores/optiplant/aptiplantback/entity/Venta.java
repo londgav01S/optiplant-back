@@ -21,6 +21,9 @@ import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * Entidad que representa una venta en el sistema.
+ */
 @Getter
 @Setter
 @Entity

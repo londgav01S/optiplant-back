@@ -17,6 +17,9 @@ import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * Entidad que representa un movimiento de inventario en el sistema.
+ */
 @Getter
 @Setter
 @Entity

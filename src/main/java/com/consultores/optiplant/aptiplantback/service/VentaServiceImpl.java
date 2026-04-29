@@ -35,6 +35,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Implementación del servicio de ventas.
+ */
 @Service
 @Transactional
 public class VentaServiceImpl implements VentaService {
@@ -69,6 +72,15 @@ public class VentaServiceImpl implements VentaService {
         this.inventarioService = inventarioService;
     }
 
+    /**
+     * Lista las ventas con filtros opcionales.
+     * @param page
+     * @param size
+     * @param sucursalId
+     * @param desde
+     * @param hasta
+     * @return Page<VentaResponse> con las ventas que cumplen los filtros, paginadas y ordenadas por fecha descendente.
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<VentaResponse> listar(int page, int size, Long sucursalId, LocalDate desde, LocalDate hasta) {
@@ -83,6 +95,12 @@ public class VentaServiceImpl implements VentaService {
                 .map(this::toResponse);
     }
 
+    /**
+     * Crea una nueva venta.
+     * @param request con los datos de la venta a crear
+     * @param usuarioId
+     * @return VentaResponse con la venta creada
+     */
     @Override
     public VentaResponse crear(VentaRequest request, Long usuarioId) {
         Sucursal sucursal = buscarSucursal(request.idSucursal());
@@ -104,6 +122,11 @@ public class VentaServiceImpl implements VentaService {
         return toResponse(guardada);
     }
 
+    /**
+     * Obtiene una venta por su ID.
+     * @param id
+     * @return VentaResponse con la venta encontrada
+     */
     @Override
     @Transactional(readOnly = true)
     public VentaResponse obtenerPorId(Long id) {
@@ -111,6 +134,12 @@ public class VentaServiceImpl implements VentaService {
                 .orElseThrow(() -> new ResourceNotFoundException("Venta", id)));
     }
 
+    /**
+     * Anula una venta por su ID.
+     * @param id
+     * @param motivoAnulacion
+     * @return VentaResponse con la venta anulada
+     */
     @Override
     public VentaResponse anular(Long id, String motivoAnulacion) {
         Venta venta = ventaRepository.findByIdWithRelaciones(id)
@@ -132,6 +161,13 @@ public class VentaServiceImpl implements VentaService {
 
     // --- Template Method steps ---
 
+    /**
+     * Valida que haya stock suficiente para todas las líneas de la venta en la sucursal dada.
+     * @param request
+     * @param lineas
+     * @param sucursalId
+     * @throws BusinessException si no hay stock suficiente para alguna línea
+     */
     private void validarStockParaTodasLasLineas(List<LineaVentaRequest> lineas, Long sucursalId) {
         for (LineaVentaRequest linea : lineas) {
             Inventario inv = inventarioRepository
@@ -146,6 +182,16 @@ public class VentaServiceImpl implements VentaService {
         }
     }
 
+    /**
+     * Inicializa una nueva venta con los datos proporcionados.
+     * @param sucursal
+     * @param usuario
+     * @param listaPrecios
+     * @param descuentoGlobal
+     * @param clienteNombre
+     * @param clienteDocumento
+     * @return Venta con los datos inicializados
+     */
     private Venta inicializarVenta(Sucursal sucursal, Usuario usuario,
                                     ListaPrecios listaPrecios, BigDecimal descuentoGlobal,
                                     String clienteNombre, String clienteDocumento) {
@@ -161,6 +207,15 @@ public class VentaServiceImpl implements VentaService {
         return venta;
     }
 
+
+    /**
+     * Procesa las líneas de la venta y calcula el subtotal.
+     * @param venta
+     * @param lineas
+     * @param sucursalId
+     * @param listaPrecios
+     * @return BigDecimal con el subtotal de la venta
+     */
     private BigDecimal procesarLineas(Venta venta, List<LineaVentaRequest> lineas,
                                       Long sucursalId, ListaPrecios listaPrecios) {
         BigDecimal subtotalAcumulado = BigDecimal.ZERO;
@@ -187,11 +242,21 @@ public class VentaServiceImpl implements VentaService {
         return MonedaUtils.monetario(subtotalAcumulado);
     }
 
+    /**
+     * Aplica el descuento global a la venta.
+     * @param venta
+     * @param subtotal
+     */
     private void aplicarDescuentoGlobal(Venta venta, BigDecimal subtotal) {
         venta.setSubtotal(subtotal);
         venta.setTotal(MonedaUtils.aplicarDescuento(subtotal, venta.getDescuentoGlobal()));
     }
 
+    /**
+     * Registra los movimientos de retiro en el inventario para cada línea de la venta.
+     * @param venta
+     * @param usuarioId
+     */
     private void registrarRetiros(Venta venta, Long usuarioId) {
         Long sucursalId = venta.getSucursal().getId();
         for (DetalleVenta detalle : venta.getDetalles()) {
@@ -208,6 +273,10 @@ public class VentaServiceImpl implements VentaService {
         }
     }
 
+    /**
+     * Reintegra el stock de una venta anulada, registrando movimientos de devolución en el inventario.
+     * @param venta
+     */
     private void reintegrarStock(Venta venta) {
         // Usa el usuario original de la venta como responsable del movimiento de devolución
         Long usuarioId = venta.getUsuario().getId();
@@ -229,6 +298,13 @@ public class VentaServiceImpl implements VentaService {
 
     // --- Resolución de precio ---
 
+    /**
+     * Resuelve el precio unitario para un producto en una venta, considerando la lista de precios y el CPP del inventario.
+     * @param producto
+     * @param lista
+     * @param sucursalId
+     * @return BigDecimal con el precio unitario
+     */
     private BigDecimal resolverPrecio(Producto producto, ListaPrecios lista, Long sucursalId) {
         if (lista != null) {
             return precioDesdeListaVigente(producto, lista);
@@ -243,6 +319,12 @@ public class VentaServiceImpl implements VentaService {
                         "'. Configure una lista de precios o registre compras para establecer el CPP."));
     }
 
+    /**
+     * Resuelve el precio unitario
+     * @param producto
+     * @param lista
+     * @return BigDecimal con el precio unitario
+     */
     private BigDecimal precioDesdeListaVigente(Producto producto, ListaPrecios lista) {
         LocalDate hoy = LocalDate.now();
         // Primero busca precio con rango de fechas vigente
@@ -265,21 +347,41 @@ public class VentaServiceImpl implements VentaService {
 
     // --- Helpers de carga ---
 
+    /**
+     * Busca una sucursal por su ID.
+     * @param id
+     * @return Sucursal encontrada o excepción si no se encuentra.
+     */
     private Sucursal buscarSucursal(Long id) {
         return sucursalRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Sucursal", id));
     }
 
+    /**
+     * Busca un usuario por su ID.
+     * @param id
+     * @return Usuario encontrado
+     */
     private Usuario buscarUsuario(Long id) {
         return usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario", id));
     }
 
+    /**
+     * Busca una lista de precios por su ID.
+     * @param id
+     * @return Lista de precios encontrada o excepción si no se encuentra.
+     */
     private ListaPrecios buscarListaPrecios(Long id) {
         return listaPreciosRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Lista de precios", id));
     }
 
+    /**
+     * Convierte una venta a una respuesta de venta.
+     * @param venta
+     * @return VentaResponse con los datos de la venta.
+     */
     private VentaResponse toResponse(Venta venta) {
         List<DetalleVentaResponse> detallesResponse = venta.getDetalles().stream()
                 .map(detalle -> new DetalleVentaResponse(

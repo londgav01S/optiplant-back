@@ -14,6 +14,9 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Implementación del servicio de logística.
+ */
 @Service
 @Transactional(readOnly = true)
 public class LogisticaServiceImpl implements LogisticaService {
@@ -29,6 +32,13 @@ public class LogisticaServiceImpl implements LogisticaService {
         this.transferenciaRepository = transferenciaRepository;
     }
 
+    /**
+     * Genera un reporte logístico con el porcentaje de cumplimiento y faltantes totales para transferencias completadas
+     * @param sucursalOrigenId
+     * @param sucursalDestinoId
+     * @param desde
+     * @return List<ReporteLogisticoResponse> con el reporte logístico filtrado por sucursal origen, destino y fecha de solicitud.
+     */ 
     @Override
     public List<ReporteLogisticoResponse> reporte(Long sucursalOrigenId, Long sucursalDestinoId, LocalDate desde) {
         LocalDateTime desdeDateTime = desde != null ? desde.atStartOfDay() : LocalDateTime.of(1970, 1, 1, 0, 0);
@@ -40,6 +50,11 @@ public class LogisticaServiceImpl implements LogisticaService {
                 .toList();
     }
 
+
+    /**
+     * Lista las transferencias que están en estado "EN_TRANSITO" con sus asociaciones para mostrar información relevante en la vista de seguimiento logístico.
+     * @return List<TransferenciaResponse> con las transferencias en estado "EN_TRANSITO" con sus asociaciones.
+     */
     @Override
     public List<TransferenciaResponse> enTransito() {
         return transferenciaRepository
@@ -51,6 +66,11 @@ public class LogisticaServiceImpl implements LogisticaService {
 
     // --- Cálculo de métricas ---
 
+    /**
+     * Convierte una entidad Transferencia con sus detalles asociados en un ReporteLogisticoResponse calculando el porcentaje de cumplimiento y faltantes totales.
+     * @param t
+     * @return ReporteLogisticoResponse con el porcentaje de cumplimiento y faltantes totales para la transferencia.
+     */
     private ReporteLogisticoResponse toReporteResponse(Transferencia t) {
         List<DetalleTransferencia> detalles = t.getDetalles();
 
@@ -81,6 +101,11 @@ public class LogisticaServiceImpl implements LogisticaService {
                 faltanteTotal.setScale(2, RoundingMode.HALF_UP));
     }
 
+    /**
+     * Convierte una entidad Transferencia con sus asociaciones en un TransferenciaResponse.
+     * @param t
+     * @return TransferenciaResponse con las asociaciones de la transferencia.
+     */
     private TransferenciaResponse toTransferenciaResponse(Transferencia t) {
         return new TransferenciaResponse(
                 t.getId(),

@@ -20,6 +20,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Controlador para CRUD de productos y operaciones relacionadas.
+ *
+ * <p>Incluye endpoints para listar, crear, actualizar y desactivar productos. Los
+ * permisos están restringidos según la operación: listado y lectura para roles
+ * operativos; creación/actualización para ADMIN/Gerente; desactivación sólo ADMIN.
+ */
 @RestController
 @RequestMapping("/api/productos")
 public class ProductoController {
@@ -30,6 +37,9 @@ public class ProductoController {
         this.productoService = productoService;
     }
 
+    /**
+     * Lista productos paginados con filtros opcionales por nombre o SKU.
+     */
     @PreAuthorize("hasAnyRole('ADMIN','GERENTE','OPERADOR')")
     @GetMapping
     public ResponseEntity<ApiResponse<Page<ProductoResponse>>> listar(
@@ -41,6 +51,9 @@ public class ProductoController {
         return ResponseEntity.ok(ApiResponse.success("Productos obtenidos", data));
     }
 
+    /**
+     * Crea un nuevo producto. Requiere rol ADMIN o GERENTE.
+     */
     @PreAuthorize("hasAnyRole('ADMIN','GERENTE')")
     @PostMapping
     public ResponseEntity<ApiResponse<ProductoResponse>> crear(@Valid @RequestBody ProductoRequest request) {
@@ -48,6 +61,9 @@ public class ProductoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("Producto creado", data));
     }
 
+    /**
+     * Obtiene un producto por su id.
+     */
     @PreAuthorize("hasAnyRole('ADMIN','GERENTE','OPERADOR')")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<ProductoResponse>> obtenerPorId(@PathVariable Long id) {
@@ -55,6 +71,9 @@ public class ProductoController {
         return ResponseEntity.ok(ApiResponse.success("Producto obtenido", data));
     }
 
+    /**
+     * Actualiza un producto existente. Requiere rol ADMIN o GERENTE.
+     */
     @PreAuthorize("hasAnyRole('ADMIN','GERENTE')")
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<ProductoResponse>> actualizar(
@@ -64,6 +83,9 @@ public class ProductoController {
         return ResponseEntity.ok(ApiResponse.success("Producto actualizado", data));
     }
 
+    /**
+     * Desactiva un producto (soft delete). Requiere rol ADMIN.
+     */
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<ProductoResponse>> desactivar(@PathVariable Long id) {
@@ -71,6 +93,9 @@ public class ProductoController {
         return ResponseEntity.ok(ApiResponse.success("Producto desactivado", data));
     }
 
+    /**
+     * Endpoint de compatibilidad para desactivar usando PATCH.
+     */
     @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}/desactivar")
     public ResponseEntity<ApiResponse<ProductoResponse>> desactivarCompat(@PathVariable Long id) {

@@ -26,6 +26,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+/**
+ * Controlador REST para la administración de ventas.
+ *
+ * <p>Incluye operaciones para listar ventas, crear una nueva venta, consultar por
+ * identificador y aplicar anulaciones o endpoints de compatibilidad relacionados
+ * con flujos del frontend.
+ */
 @RestController
 @RequestMapping("/api/ventas")
 public class VentaController {
@@ -38,6 +45,9 @@ public class VentaController {
         this.usuarioRepository = usuarioRepository;
     }
 
+    /**
+     * Lista ventas paginadas con filtros opcionales por sucursal y rango de fechas.
+     */
     @PreAuthorize("@authorizationService.canListVentas(authentication, #sucursalId)")
     @GetMapping
     public ResponseEntity<ApiResponse<Page<VentaResponse>>> listar(
@@ -50,6 +60,9 @@ public class VentaController {
         return ResponseEntity.ok(ApiResponse.success("Ventas obtenidas", data));
     }
 
+    /**
+     * Registra una nueva venta asociada al usuario autenticado.
+     */
     @PreAuthorize("@authorizationService.canCreateVenta(authentication, #request.idSucursal())")
     @PostMapping
     public ResponseEntity<ApiResponse<VentaResponse>> crear(
@@ -60,6 +73,9 @@ public class VentaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("Venta creada", data));
     }
 
+    /**
+     * Obtiene una venta por su identificador.
+     */
     @PreAuthorize("@authorizationService.canReadVenta(authentication, #id)")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<VentaResponse>> obtenerPorId(@PathVariable Long id) {
@@ -67,6 +83,9 @@ public class VentaController {
         return ResponseEntity.ok(ApiResponse.success("Venta obtenida", data));
     }
 
+    /**
+     * Anula una venta proporcionando un motivo explícito.
+     */
     @PreAuthorize("hasAnyRole('ADMIN','GERENTE')")
     @PatchMapping("/{id}/anular")
     public ResponseEntity<ApiResponse<VentaResponse>> anular(
@@ -76,9 +95,16 @@ public class VentaController {
         return ResponseEntity.ok(ApiResponse.success("Venta anulada", data));
     }
 
+    /**
+     * Endpoint de compatibilidad para la confirmación de ventas.
+     *
+     * <p>Actualmente valida que la venta no esté anulada y devuelve la información
+     * existente; no ejecuta una transición de estado explícita en el servicio.
+     */
     @PreAuthorize("@authorizationService.canReadVenta(authentication, #id)")
     @PostMapping("/{id}/confirmar")
     public ResponseEntity<ApiResponse<VentaResponse>> confirmarCompat(@PathVariable Long id) {
+        // Se reutiliza la consulta de la venta para mantener compatibilidad con el frontend actual.
         VentaResponse data = ventaService.obtenerPorId(id);
         if (data.estado() == EstadoVenta.ANULADA) {
             throw new BusinessException("La venta está anulada y no se puede confirmar");
@@ -86,6 +112,9 @@ public class VentaController {
         return ResponseEntity.ok(ApiResponse.success("Venta confirmada", data));
     }
 
+    /**
+     * Endpoint de compatibilidad para cancelar una venta usando un motivo por defecto.
+     */
     @PreAuthorize("hasAnyRole('ADMIN','GERENTE')")
     @PostMapping("/{id}/cancelar")
     public ResponseEntity<ApiResponse<VentaResponse>> cancelarCompat(@PathVariable Long id) {
@@ -95,7 +124,7 @@ public class VentaController {
 
     private Long getAuthUserId(Authentication auth) {
         return usuarioRepository.findByEmailAndActivoTrue(auth.getName())
-                .map(u -> u.getId())
+                .map(com.consultores.optiplant.aptiplantback.entity.Usuario::getId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario no autenticado"));
     }
 }

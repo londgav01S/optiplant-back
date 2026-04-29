@@ -14,6 +14,9 @@ import java.math.BigDecimal;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * Entidad que representa una relación entre un producto y una unidad de medida.
+ */
 @Getter
 @Setter
 @Entity

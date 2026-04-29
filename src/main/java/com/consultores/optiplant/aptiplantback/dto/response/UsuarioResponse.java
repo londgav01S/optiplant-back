@@ -1,5 +1,8 @@
 package com.consultores.optiplant.aptiplantback.dto.response;
 
+/**
+ * DTO para la respuesta de un usuario.
+ */
 public record UsuarioResponse(
     Long id,
     String nombre,

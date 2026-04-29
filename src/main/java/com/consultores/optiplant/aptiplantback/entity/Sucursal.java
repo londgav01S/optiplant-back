@@ -14,6 +14,9 @@ import java.util.Set;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * Entidad que representa una sucursal en el sistema.
+ */
 @Getter
 @Setter
 @Entity

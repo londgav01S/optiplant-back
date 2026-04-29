@@ -5,6 +5,9 @@ import com.consultores.optiplant.aptiplantback.dto.response.VentaResponse;
 import java.time.LocalDate;
 import org.springframework.data.domain.Page;
 
+/**
+ * Contrato de negocio para la gestión de ventas, incluyendo creación, listado, consulta por ID y anulación de ventas.
+ */
 public interface VentaService {
 
     Page<VentaResponse> listar(int page, int size, Long sucursalId, LocalDate desde, LocalDate hasta);

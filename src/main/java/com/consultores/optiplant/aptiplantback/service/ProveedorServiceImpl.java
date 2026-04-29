@@ -15,6 +15,9 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Implementación del servicio de proveedores.
+ */
 @Service
 @Transactional
 public class ProveedorServiceImpl implements ProveedorService {
@@ -27,12 +30,21 @@ public class ProveedorServiceImpl implements ProveedorService {
         this.ordenCompraRepository = ordenCompraRepository;
     }
 
+    /**
+     * Lista los proveedores activos.
+     * @return Lista<Proveedor> con los proveedores activos.
+     */
     @Override
     @Transactional(readOnly = true)
     public List<Proveedor> listarActivos() {
         return proveedorRepository.findByActivoTrue();
     }
 
+    /**
+     * Crea un nuevo proveedor.
+     * @param proveedor
+     * @return Proveedor con los datos del proveedor creado.
+     */
     @Override
     public Proveedor crear(Proveedor proveedor) {
         if (proveedor == null) {
@@ -50,6 +62,12 @@ public class ProveedorServiceImpl implements ProveedorService {
         return proveedorRepository.save(proveedor);
     }
 
+    /**
+     * Actualiza un proveedor existente.
+     * @param id
+     * @param proveedor
+     * @return Proveedor con los datos actualizados.
+     */
     @Override
     public Proveedor actualizar(Long id, Proveedor proveedor) {
         if (proveedor == null) {
@@ -66,6 +84,11 @@ public class ProveedorServiceImpl implements ProveedorService {
         return proveedorRepository.save(actual);
     }
 
+    /**
+     * Desactiva un proveedor.
+     * @param id
+     * @return Proveedor con los datos del proveedor desactivado.
+     */
     @Override
     @Transactional(readOnly = true)
     public Proveedor obtenerPorId(Long id) {
@@ -73,6 +96,13 @@ public class ProveedorServiceImpl implements ProveedorService {
                 .orElseThrow(() -> new ResourceNotFoundException("Proveedor", id));
     }
 
+    /**
+     * Obtiene el historial de compras de un proveedor en un rango de fechas.
+     * @param proveedorId
+     * @param desde
+     * @param hasta
+     * @return Lista<OrdenCompraResponse> con las órdenes de compra del proveedor en el rango de fechas.
+     */
     @Override
     @Transactional(readOnly = true)
     public List<OrdenCompraResponse> historialCompras(Long proveedorId, LocalDate desde, LocalDate hasta) {
@@ -99,11 +129,22 @@ public class ProveedorServiceImpl implements ProveedorService {
                 .toList();
     }
 
+    /**
+     * Busca un proveedor por su ID.
+     * @param id
+     * @return Proveedor encontrado o excepción si no se encuentra.
+     */
     private Proveedor buscarProveedor(Long id) {
         return proveedorRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Proveedor", id));
     }
 
+    /**
+     * Valida que un texto obligatorio no sea nulo ni vacío.
+     * @param valor
+     * @param mensaje
+     * @return String con el texto validado y normalizado.
+     */
     private String validarTextoObligatorio(String valor, String mensaje) {
         if (valor == null || valor.trim().isEmpty()) {
             throw new BusinessException(mensaje);
@@ -111,6 +152,11 @@ public class ProveedorServiceImpl implements ProveedorService {
         return valor.trim();
     }
 
+    /**
+     * Normaliza un texto eliminando espacios al inicio y al final.
+     * @param valor
+     * @return String normalizado o null si el valor es nulo o vacío.
+     */
     private String normalizarTexto(String valor) {
         if (valor == null) {
             return null;
@@ -119,6 +165,11 @@ public class ProveedorServiceImpl implements ProveedorService {
         return normalizado.isEmpty() ? null : normalizado;
     }
 
+    /**
+     * Convierte una orden de compra a una respuesta de orden de compra.
+     * @param orden
+     * @return OrdenCompraResponse con los datos de la orden de compra.
+     */
     private OrdenCompraResponse toResponse(OrdenCompra orden) {
         List<DetalleOrdenCompraResponse> detalles = orden.getDetalles().stream()
                 .map(d -> new DetalleOrdenCompraResponse(

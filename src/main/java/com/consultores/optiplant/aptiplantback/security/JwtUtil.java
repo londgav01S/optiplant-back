@@ -11,12 +11,20 @@ import java.util.function.Function;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+/**
+ * Clase de utilidad para generar y validar tokens JWT.
+ */
 @Component
 public class JwtUtil {
 
     private final String secret;
     private final long expirationMs;
 
+    /**
+     * Constructor de la clase JwtUtil.
+     * @param secret
+     * @param expirationMs
+     */
     public JwtUtil(
         @Value("${jwt.secret:}") String secret,
         @Value("${jwt.expiration-ms:86400000}") long expirationMs
@@ -25,15 +33,33 @@ public class JwtUtil {
         this.expirationMs = expirationMs;
     }
 
+    /**
+     * Extrae el nombre de usuario del token JWT.
+     * @param token
+     * @return String con el nombre de usuario extraído del token.
+     */
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
+    /**
+     * Extrae un claim del token JWT.
+     * @param <T>
+     * @param token
+     * @param claimsResolver
+     * @return T con el claim extraído del token.
+     */
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
     }
 
+    /**
+     * Genera un token JWT para un usuario dado con los claims especificados.
+     * @param subject
+     * @param claims
+     * @return String con el token JWT generado.
+     */
     public String generateToken(String subject, Map<String, Object> claims) {
         Date now = new Date();
         Date expirationDate = new Date(now.getTime() + expirationMs);
@@ -47,6 +73,11 @@ public class JwtUtil {
             .compact();
     }
 
+    /**
+     * Valida si un token JWT es válido.
+     * @param token
+     * @return boolean indicando si el token es válido o no.
+     */
     public boolean isTokenValid(String token) {
         try {
             Date expiration = extractClaim(token, Claims::getExpiration);
@@ -56,6 +87,11 @@ public class JwtUtil {
         }
     }
 
+    /**
+     * Extrae todos los claims de un token JWT.
+     * @param token
+     * @return Claims con los claims extraídos del token.
+     */
     private Claims extractAllClaims(String token) {
         return Jwts.parser()
             .verifyWith(getSigningKey())
@@ -64,6 +100,10 @@ public class JwtUtil {
             .getPayload();
     }
 
+    /**
+     * Obtiene la clave secreta para firmar y verificar los tokens JWT.
+     * @return SecretKey con la clave secreta.
+     */
     private SecretKey getSigningKey() {
         if (secret == null || secret.length() < 32) {
             throw new IllegalStateException("La propiedad jwt.secret debe tener al menos 32 caracteres");

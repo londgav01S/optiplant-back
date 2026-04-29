@@ -4,6 +4,9 @@ import com.consultores.optiplant.aptiplantback.dto.request.UsuarioRequest;
 import com.consultores.optiplant.aptiplantback.dto.response.UsuarioResponse;
 import org.springframework.data.domain.Page;
 
+/**
+ * Contrato de negocio para la gestión de usuarios, incluyendo creación, actualización, listado y desactivación de usuarios.
+ */
 public interface UsuarioService {
 
     Page<UsuarioResponse> listar(int page, int size, Boolean activo, Long sucursalId);

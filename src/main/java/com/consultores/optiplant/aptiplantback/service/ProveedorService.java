@@ -5,6 +5,9 @@ import com.consultores.optiplant.aptiplantback.dto.response.OrdenCompraResponse;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * Contrato de negocio para la gestión de proveedores, incluyendo creación, actualización, consulta de proveedores activos e historial de compras.
+ */
 public interface ProveedorService {
 
     List<Proveedor> listarActivos();

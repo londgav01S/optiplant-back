@@ -2,6 +2,9 @@ package com.consultores.optiplant.aptiplantback.dto.response;
 
 import java.math.BigDecimal;
 
+/**
+ * DTO para la respuesta de un inventario.
+ */
 public record InventarioResponse(
     Long id,
     Long productoId,

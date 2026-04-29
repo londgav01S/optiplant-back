@@ -5,6 +5,9 @@ import com.consultores.optiplant.aptiplantback.enums.NivelUrgencia;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+/**
+ * DTO para la respuesta de una transferencia.
+ */
 public record TransferenciaResponse(
     Long id,
     Long sucursalOrigenId,

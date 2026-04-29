@@ -15,6 +15,9 @@ import java.util.Set;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * Entidad que representa un rol en el sistema.
+ */
 @Getter
 @Setter
 @Entity

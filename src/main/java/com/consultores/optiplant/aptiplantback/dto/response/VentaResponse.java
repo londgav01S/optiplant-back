@@ -5,6 +5,9 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * DTO para la respuesta de una venta.
+ */
 public record VentaResponse(
     Long id,
     Long sucursalId,

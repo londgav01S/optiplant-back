@@ -40,6 +40,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
+/**
+ * Pruebas unitarias para la implementación del servicio de compras.
+ */
 @ExtendWith(MockitoExtension.class)
 class CompraServiceTest {
 
@@ -54,6 +57,10 @@ class CompraServiceTest {
 
     @InjectMocks private CompraServiceImpl compraService;
 
+    /**
+     * Crea un proveedor de prueba.
+     * @return
+     */
     private Proveedor crearProveedor() {
         Proveedor p = new Proveedor();
         p.setId(1L);
@@ -62,6 +69,10 @@ class CompraServiceTest {
         return p;
     }
 
+    /**
+     * Crea una sucursal de prueba.
+     * @return
+     */
     private Sucursal crearSucursal() {
         Sucursal s = new Sucursal();
         s.setId(1L);
@@ -70,6 +81,10 @@ class CompraServiceTest {
         return s;
     }
 
+    /**
+     * Crea un usuario de prueba.
+     * @return
+     */
     private Usuario crearUsuario() {
         Usuario u = new Usuario();
         u.setId(1L);
@@ -78,6 +93,13 @@ class CompraServiceTest {
         return u;
     }
 
+    /**
+     * Crea un producto de prueba.
+     * @param id
+     * @param nombre
+     * @param sku
+     * @return
+     */
     private Producto crearProducto(Long id, String nombre, String sku) {
         Producto p = new Producto();
         p.setId(id);
@@ -87,6 +109,15 @@ class CompraServiceTest {
         return p;
     }
 
+    /**
+     * Crea un inventario de prueba.
+     * @param id
+     * @param producto
+     * @param sucursal
+     * @param stock
+     * @param cpp
+     * @return Inventario
+     */
     private Inventario crearInventario(Long id, Producto producto, Sucursal sucursal, 
                                        BigDecimal stock, BigDecimal cpp) {
         Inventario inv = new Inventario();

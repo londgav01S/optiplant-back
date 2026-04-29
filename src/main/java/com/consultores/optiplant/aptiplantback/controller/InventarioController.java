@@ -7,6 +7,7 @@ import com.consultores.optiplant.aptiplantback.dto.request.MovimientoRequest;
 import com.consultores.optiplant.aptiplantback.dto.response.InventarioResponse;
 import com.consultores.optiplant.aptiplantback.dto.response.MovimientoResponse;
 import com.consultores.optiplant.aptiplantback.repository.UsuarioRepository;
+import com.consultores.optiplant.aptiplantback.entity.Usuario;
 import com.consultores.optiplant.aptiplantback.service.InventarioService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -25,6 +26,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+/*
+ * Controlador que gestiona las operaciones REST sobre inventarios y movimientos.
+ *
+ * Soporta endpoints para consultar inventarios (global y por sucursal),
+ * actualizar configuración de inventario, registrar ingresos/retiros y aplicar
+ * ajustes manuales. Las operaciones que modifican el inventario verifican
+ * permisos mediante {@code authorizationService}.
+ */
 @RestController
 @RequestMapping({"/api/inventarios", "/api/inventario"})
 public class InventarioController {
@@ -37,6 +46,10 @@ public class InventarioController {
         this.usuarioRepository = usuarioRepository;
     }
 
+    /**
+     * Consulta paginada del inventario. Se pueden aplicar filtros por sucursal
+     * o por producto.
+     */
     @PreAuthorize("hasAnyRole('ADMIN','GERENTE','OPERADOR')")
     @GetMapping
     public ResponseEntity<ApiResponse<Page<InventarioResponse>>> consultarGlobal(
@@ -48,6 +61,10 @@ public class InventarioController {
         return ResponseEntity.ok(ApiResponse.success("Inventario obtenido", data));
     }
 
+    /**
+     * Consulta del inventario para una sucursal específica (lista completa, sin
+     * paginación).
+     */
     @PreAuthorize("hasAnyRole('ADMIN','GERENTE','OPERADOR')")
     @GetMapping("/sucursal/{sucursalId}")
     public ResponseEntity<ApiResponse<List<InventarioResponse>>> consultarPorSucursal(@PathVariable Long sucursalId) {
@@ -55,6 +72,9 @@ public class InventarioController {
         return ResponseEntity.ok(ApiResponse.success("Inventario de sucursal obtenido", data));
     }
 
+    /**
+     * Obtiene un registro de inventario por su identificador.
+     */
     @PreAuthorize("hasAnyRole('ADMIN','GERENTE','OPERADOR')")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<InventarioResponse>> obtenerPorId(@PathVariable Long id) {
@@ -62,6 +82,10 @@ public class InventarioController {
         return ResponseEntity.ok(ApiResponse.success("Inventario obtenido", data));
     }
 
+    /**
+     * Actualiza la configuración asociada a un registro de inventario (mínimos,
+     * máximos, unidad de medida, etc.).
+     */
     @PreAuthorize("@authorizationService.canWriteInventario(authentication, #id)")
     @PutMapping("/{id}/config")
     public ResponseEntity<ApiResponse<InventarioResponse>> actualizarConfig(
@@ -71,6 +95,11 @@ public class InventarioController {
         return ResponseEntity.ok(ApiResponse.success("Configuración de inventario actualizada", data));
     }
 
+    /**
+     * Registra un ingreso de stock para un registro de inventario.
+     *
+     * @param id id del registro de inventario donde se registra el ingreso.
+     */
     @PreAuthorize("@authorizationService.canWriteInventario(authentication, #id)")
     @PostMapping("/{id}/ingresos")
     public ResponseEntity<ApiResponse<MovimientoResponse>> registrarIngreso(
@@ -83,6 +112,9 @@ public class InventarioController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("Ingreso registrado", data));
     }
 
+    /**
+     * Registra un retiro de stock para un registro de inventario.
+     */
     @PreAuthorize("@authorizationService.canWriteInventario(authentication, #id)")
     @PostMapping("/{id}/retiros")
     public ResponseEntity<ApiResponse<MovimientoResponse>> registrarRetiro(
@@ -95,6 +127,9 @@ public class InventarioController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("Retiro registrado", data));
     }
 
+    /**
+     * Aplica un ajuste manual de stock (por ejemplo, inventario físico o corrección).
+     */
     @PreAuthorize("hasAnyRole('ADMIN','GERENTE','OPERADOR')")
     @PostMapping("/ajuste")
     public ResponseEntity<ApiResponse<MovimientoResponse>> ajustarStock(
@@ -111,6 +146,9 @@ public class InventarioController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("Ajuste de stock aplicado", data));
     }
 
+    /**
+     * Historial paginado de movimientos de un registro de inventario.
+     */
     @PreAuthorize("hasAnyRole('ADMIN','GERENTE','OPERADOR')")
     @GetMapping("/{id}/movimientos")
     public ResponseEntity<ApiResponse<Page<MovimientoResponse>>> historialMovimientos(
@@ -121,9 +159,13 @@ public class InventarioController {
         return ResponseEntity.ok(ApiResponse.success("Movimientos obtenidos", data));
     }
 
+    /**
+     * Recupera el id del usuario autenticado; lanza 401 si el usuario no existe o
+     * no está activo.
+     */
     private Long getAuthUserId(Authentication auth) {
         return usuarioRepository.findByEmailAndActivoTrue(auth.getName())
-                .map(u -> u.getId())
+                .map(Usuario::getId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario no autenticado"));
     }
 }

@@ -17,6 +17,7 @@ import com.consultores.optiplant.aptiplantback.service.TransferenciaService;
 import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.regex.Pattern;
 import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +33,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+/**
+ * Controlador REST para la gestión logística de transferencias.
+ *
+ * <p>Incluye endpoints de reporte, consulta de transferencias en tránsito,
+ * administración de rutas logísticas y actualización de estados operativos.
+ * El controlador apoya las operaciones con validaciones de estado y permisos.
+ */
 @RestController
 @RequestMapping("/api/logistica")
 public class LogisticaController {
@@ -55,6 +63,9 @@ public class LogisticaController {
         this.usuarioRepository = usuarioRepository;
     }
 
+    /**
+     * Genera un reporte logístico filtrado por sucursal origen, destino y fecha.
+     */
     @PreAuthorize("hasAnyRole('ADMIN','GERENTE')")
     @GetMapping("/reporte")
     public ResponseEntity<ApiResponse<List<ReporteLogisticoResponse>>> reporte(
@@ -65,6 +76,9 @@ public class LogisticaController {
         return ResponseEntity.ok(ApiResponse.success("Reporte logístico obtenido", data));
     }
 
+    /**
+     * Lista las transferencias que se encuentran actualmente en tránsito.
+     */
     @PreAuthorize("hasAnyRole('ADMIN','GERENTE')")
     @GetMapping("/en-transito")
     public ResponseEntity<ApiResponse<List<TransferenciaResponse>>> enTransito() {
@@ -72,6 +86,9 @@ public class LogisticaController {
         return ResponseEntity.ok(ApiResponse.success("Transferencias en tránsito obtenidas", data));
     }
 
+    /**
+     * Lista las rutas logísticas visibles en el módulo de logística.
+     */
     @PreAuthorize("hasAnyRole('ADMIN','GERENTE')")
     @GetMapping
     public ResponseEntity<ApiResponse<List<LogisticaRutaResponse>>> listarRutas() {
@@ -83,12 +100,16 @@ public class LogisticaController {
         return ResponseEntity.ok(ApiResponse.success("Rutas logísticas obtenidas", data));
     }
 
+    /**
+     * Crea o asigna una ruta logística a una transferencia existente.
+     */
     @PreAuthorize("hasAnyRole('ADMIN','GERENTE')")
     @PostMapping("/rutas")
     public ResponseEntity<ApiResponse<LogisticaRutaResponse>> crearRuta(
             @Valid @RequestBody LogisticaRutaRequest request,
             Authentication auth
     ) {
+        // Si la transferencia está pendiente de aprobación, se aprueba antes de asignarle ruta.
         Long usuarioId = getAuthUserId(auth);
         Transferencia transferencia = transferenciaRepository.findById(request.transferenciaId())
                 .orElseThrow(() -> new ResourceNotFoundException("Transferencia", request.transferenciaId()));
@@ -112,6 +133,11 @@ public class LogisticaController {
         return ResponseEntity.ok(ApiResponse.success("Ruta logística creada", toRutaResponse(guardada)));
     }
 
+    /**
+     * Actualiza el estado operacional de una ruta logística.
+     *
+     * <p>Los valores soportados son ASIGNADA, EN_CAMINO y ENTREGADA.
+     */
     @PreAuthorize("hasAnyRole('ADMIN','GERENTE')")
     @PatchMapping("/rutas/{id}/estado")
     public ResponseEntity<ApiResponse<LogisticaRutaResponse>> actualizarEstadoRuta(
@@ -122,6 +148,7 @@ public class LogisticaController {
         Long usuarioId = getAuthUserId(auth);
         String estado = request.estado().trim().toUpperCase();
 
+        // Se traduce el estado logístico recibido al flujo real del servicio de transferencias.
         TransferenciaResponse respuesta;
         switch (estado) {
             case "ASIGNADA" -> {
@@ -142,6 +169,9 @@ public class LogisticaController {
         return ResponseEntity.ok(ApiResponse.success("Estado de ruta actualizado", toRutaResponse(transferencia)));
     }
 
+    /**
+     * Determina si una transferencia debe mostrarse en el módulo de logística.
+     */
     private boolean esEstadoVisibleEnLogistica(Transferencia transferencia) {
         EstadoTransferencia estado = transferencia.getEstado();
         return estado == EstadoTransferencia.EN_PREPARACION
@@ -150,6 +180,9 @@ public class LogisticaController {
                 || estado == EstadoTransferencia.RECIBIDA_CON_FALTANTES;
     }
 
+    /**
+     * Convierte una transferencia a la vista de ruta logística.
+     */
     private LogisticaRutaResponse toRutaResponse(Transferencia transferencia) {
         String[] transporte = parseTransportista(transferencia.getTransportista());
         return new LogisticaRutaResponse(
@@ -162,6 +195,9 @@ public class LogisticaController {
         );
     }
 
+    /**
+     * Convierte el estado interno de transferencia a un estado de negocio de ruta.
+     */
     private String mapEstadoRuta(EstadoTransferencia estado) {
         return switch (estado) {
             case EN_PREPARACION -> "ASIGNADA";
@@ -171,24 +207,33 @@ public class LogisticaController {
         };
     }
 
+    /**
+     * Construye la cadena persistida para identificar vehículo y conductor.
+     */
     private String construirTransportista(String vehiculo, String conductor) {
         return vehiculo.trim() + TRANSPORTISTA_SEPARATOR + conductor.trim();
     }
 
+    /**
+     * Separa la representación persistida del transportista en vehículo y conductor.
+     */
     private String[] parseTransportista(String transportista) {
         if (transportista == null || transportista.isBlank()) {
             return new String[]{null, null};
         }
-        String[] partes = transportista.split(TRANSPORTISTA_SEPARATOR, 2);
+        String[] partes = transportista.split(Pattern.quote(TRANSPORTISTA_SEPARATOR), 2);
         if (partes.length == 2) {
             return new String[]{partes[0].trim(), partes[1].trim()};
         }
         return new String[]{transportista, null};
     }
 
+    /**
+     * Obtiene el id del usuario autenticado a partir de su correo electrónico.
+     */
     private Long getAuthUserId(Authentication auth) {
         return usuarioRepository.findByEmailAndActivoTrue(auth.getName())
-                .map(u -> u.getId())
+                .map(com.consultores.optiplant.aptiplantback.entity.Usuario::getId)
                 .orElseThrow(() -> new ResponseStatusException(org.springframework.http.HttpStatus.UNAUTHORIZED, "Usuario no autenticado"));
     }
 }

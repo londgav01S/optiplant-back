@@ -11,6 +11,9 @@ import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.util.List;
 
+/**
+ * DTO para la solicitud de venta.
+ */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record VentaRequest(
     @NotBlank String clienteNombre,

@@ -19,6 +19,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Controlador REST para la administración de sucursales.
+ *
+ * <p>Permite listar, consultar, crear, actualizar y desactivar sucursales. Las
+ * operaciones de lectura están disponibles para roles operativos, mientras que
+ * las operaciones de escritura están restringidas a ADMIN.
+ */
 @RestController
 @RequestMapping("/api/sucursales")
 public class SucursalController {
@@ -29,6 +36,9 @@ public class SucursalController {
         this.sucursalService = sucursalService;
     }
 
+    /**
+     * Lista las sucursales activas disponibles en el sistema.
+     */
     @PreAuthorize("hasAnyRole('ADMIN','GERENTE','OPERADOR')")
     @GetMapping
     public ResponseEntity<ApiResponse<List<SucursalResponse>>> listar() {
@@ -36,6 +46,9 @@ public class SucursalController {
         return ResponseEntity.ok(ApiResponse.success("Sucursales obtenidas", data));
     }
 
+    /**
+     * Crea una nueva sucursal asociada a una lista de precios.
+     */
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<ApiResponse<SucursalResponse>> crear(@Valid @RequestBody SucursalRequest request) {
@@ -43,6 +56,9 @@ public class SucursalController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("Sucursal creada", data));
     }
 
+    /**
+     * Obtiene una sucursal por su identificador.
+     */
     @PreAuthorize("hasAnyRole('ADMIN','GERENTE','OPERADOR')")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<SucursalResponse>> obtenerPorId(@PathVariable Long id) {
@@ -50,6 +66,9 @@ public class SucursalController {
         return ResponseEntity.ok(ApiResponse.success("Sucursal obtenida", data));
     }
 
+    /**
+     * Actualiza los datos de una sucursal existente.
+     */
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<SucursalResponse>> actualizar(
@@ -59,6 +78,9 @@ public class SucursalController {
         return ResponseEntity.ok(ApiResponse.success("Sucursal actualizada", data));
     }
 
+    /**
+     * Desactiva una sucursal usando la operación principal de negocio.
+     */
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<SucursalResponse>> desactivar(@PathVariable Long id) {
@@ -66,6 +88,9 @@ public class SucursalController {
         return ResponseEntity.ok(ApiResponse.success("Sucursal desactivada", data));
     }
 
+    /**
+     * Endpoint de compatibilidad para desactivar usando PATCH.
+     */
     @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}/desactivar")
     public ResponseEntity<ApiResponse<SucursalResponse>> desactivarCompat(@PathVariable Long id) {

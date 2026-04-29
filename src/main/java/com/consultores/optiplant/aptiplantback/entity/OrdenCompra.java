@@ -22,6 +22,9 @@ import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * Entidad que representa una orden de compra en el sistema.
+ */
 @Getter
 @Setter
 @Entity

@@ -8,6 +8,9 @@ import com.consultores.optiplant.aptiplantback.enums.EstadoTransferencia;
 import com.consultores.optiplant.aptiplantback.enums.TratamientoFaltante;
 import org.springframework.data.domain.Page;
 
+/**
+ * Contrato de negocio para la gestión de transferencias, incluyendo creación, actualización, listado y desactivación de transferencias.
+ */
 public interface TransferenciaService {
 
     Page<TransferenciaResponse> listar(int page, int size, Long sucursalId, EstadoTransferencia estado);

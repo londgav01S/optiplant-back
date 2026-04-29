@@ -26,6 +26,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+/**
+ * Controlador REST para la administración del ciclo de vida de las transferencias.
+ *
+ * <p>Incluye operaciones para listar, crear, aprobar, rechazar, despachar,
+ * recibir y cancelar transferencias, además de definir el tratamiento de
+ * faltantes en el detalle.
+ */
 @RestController
 @RequestMapping("/api/transferencias")
 public class TransferenciaController {
@@ -38,6 +45,9 @@ public class TransferenciaController {
         this.usuarioRepository = usuarioRepository;
     }
 
+    /**
+     * Lista transferencias con paginación y filtros opcionales por sucursal y estado.
+     */
     @PreAuthorize("@authorizationService.canListTransferencias(authentication, #sucursalId)")
     @GetMapping
     public ResponseEntity<ApiResponse<Page<TransferenciaResponse>>> listar(
@@ -49,6 +59,9 @@ public class TransferenciaController {
         return ResponseEntity.ok(ApiResponse.success("Transferencias obtenidas", data));
     }
 
+    /**
+     * Crea una nueva transferencia desde una sucursal origen.
+     */
     @PreAuthorize("@authorizationService.canCreateTransferencia(authentication, #request.idSucursalOrigen())")
     @PostMapping
     public ResponseEntity<ApiResponse<TransferenciaResponse>> crear(
@@ -59,6 +72,9 @@ public class TransferenciaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("Transferencia creada", data));
     }
 
+    /**
+     * Obtiene una transferencia por su identificador.
+     */
     @PreAuthorize("@authorizationService.canReadTransferencia(authentication, #id)")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<TransferenciaResponse>> obtenerPorId(@PathVariable Long id) {
@@ -66,6 +82,9 @@ public class TransferenciaController {
         return ResponseEntity.ok(ApiResponse.success("Transferencia obtenida", data));
     }
 
+    /**
+     * Aprueba una transferencia pendiente.
+     */
     @PreAuthorize("hasAnyRole('ADMIN','GERENTE')")
     @PostMapping("/{id}/aprobar")
     public ResponseEntity<ApiResponse<TransferenciaResponse>> aprobar(
@@ -76,6 +95,9 @@ public class TransferenciaController {
         return ResponseEntity.ok(ApiResponse.success("Transferencia aprobada", data));
     }
 
+    /**
+     * Rechaza una transferencia proporcionando un motivo.
+     */
     @PreAuthorize("hasAnyRole('ADMIN','GERENTE')")
     @PostMapping("/{id}/rechazar")
     public ResponseEntity<ApiResponse<TransferenciaResponse>> rechazar(
@@ -85,6 +107,9 @@ public class TransferenciaController {
         return ResponseEntity.ok(ApiResponse.success("Transferencia rechazada", data));
     }
 
+    /**
+     * Registra el despacho de una transferencia.
+     */
     @PreAuthorize("@authorizationService.canDespacharTransferencia(authentication, #id)")
     @PostMapping("/{id}/despachar")
     public ResponseEntity<ApiResponse<TransferenciaResponse>> despachar(
@@ -96,6 +121,9 @@ public class TransferenciaController {
         return ResponseEntity.ok(ApiResponse.success("Transferencia despachada", data));
     }
 
+    /**
+     * Endpoint de compatibilidad para marcar una transferencia como enviada.
+     */
     @PreAuthorize("@authorizationService.canDespacharTransferencia(authentication, #id)")
     @PostMapping("/{id}/enviar")
     public ResponseEntity<ApiResponse<TransferenciaResponse>> enviarCompat(
@@ -106,6 +134,9 @@ public class TransferenciaController {
         return ResponseEntity.ok(ApiResponse.success("Transferencia enviada", data));
     }
 
+    /**
+     * Registra la recepción de una transferencia, incluyendo el tratamiento de faltantes.
+     */
     @PreAuthorize("@authorizationService.canRecepcionarTransferencia(authentication, #id)")
     @PostMapping("/{id}/recepcionar")
     public ResponseEntity<ApiResponse<TransferenciaResponse>> recepcionar(
@@ -117,6 +148,9 @@ public class TransferenciaController {
         return ResponseEntity.ok(ApiResponse.success("Transferencia recepcionada", data));
     }
 
+    /**
+     * Endpoint de compatibilidad para recibir una transferencia sin payload adicional.
+     */
     @PreAuthorize("@authorizationService.canRecepcionarTransferencia(authentication, #id)")
     @PostMapping("/{id}/recibir")
     public ResponseEntity<ApiResponse<TransferenciaResponse>> recibirCompat(
@@ -127,6 +161,9 @@ public class TransferenciaController {
         return ResponseEntity.ok(ApiResponse.success("Transferencia recibida", data));
     }
 
+    /**
+     * Cancela una transferencia utilizando el flujo de compatibilidad.
+     */
     @PreAuthorize("hasAnyRole('ADMIN','GERENTE')")
     @PostMapping("/{id}/cancelar")
     public ResponseEntity<ApiResponse<TransferenciaResponse>> cancelarCompat(@PathVariable Long id) {
@@ -134,6 +171,9 @@ public class TransferenciaController {
         return ResponseEntity.ok(ApiResponse.success("Transferencia cancelada", data));
     }
 
+    /**
+     * Define el tratamiento de un faltante para un detalle específico de la transferencia.
+     */
     @PreAuthorize("hasAnyRole('ADMIN','GERENTE')")
     @PatchMapping("/{id}/detalles/{detalleId}/tratamiento-faltante")
     public ResponseEntity<ApiResponse<TransferenciaResponse>> definirTratamientoFaltante(
@@ -146,7 +186,7 @@ public class TransferenciaController {
 
     private Long getAuthUserId(Authentication auth) {
         return usuarioRepository.findByEmailAndActivoTrue(auth.getName())
-                .map(u -> u.getId())
+                .map(com.consultores.optiplant.aptiplantback.entity.Usuario::getId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario no autenticado"));
     }
 }

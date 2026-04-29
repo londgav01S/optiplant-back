@@ -22,6 +22,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+/**
+ * Pruebas unitarias para la implementación del servicio de alertas, verificando la lógica de listado y resolución de alertas de stock.
+*/
 @ExtendWith(MockitoExtension.class)
 class AlertaServiceImplTest {
 
@@ -29,6 +32,12 @@ class AlertaServiceImplTest {
 
     @InjectMocks private AlertaServiceImpl alertaService;
 
+    /**
+     * Método auxiliar para crear instancias de AlertaStock con diferentes estados y configuraciones para las pruebas unitarias.
+     * @param id
+     * @param estado
+     * @return AlertaStock con la configuración especificada para su uso en pruebas unitarias.
+     */
     private AlertaStock alerta(Long id, String estado) {
         Inventario inv = new Inventario();
         inv.setId(10L);
@@ -44,6 +53,9 @@ class AlertaServiceImplTest {
         return a;
     }
 
+    /**
+     * Prueba unitaria para verificar que el método listarActivas devuelve solo alertas activas sin filtrar por sucursal ni tipo de alerta.
+     */
     @Test
     void debeListarAlertasActivasSinFiltroSucursal() {
         when(alertaRepository.findByEstado("ACTIVA")).thenReturn(List.of(alerta(1L, "ACTIVA")));
@@ -54,6 +66,9 @@ class AlertaServiceImplTest {
         assertEquals("ACTIVA", result.get(0).estado());
     }
 
+    /**
+     * Prueba unitaria para verificar que el método listarActivas devuelve solo alertas activas filtradas por sucursal, sin importar el tipo de alerta.
+     */
     @Test
     void debeListarAlertasActivasPorSucursal() {
         when(alertaRepository.findByInventarioSucursalIdAndEstado(1L, "ACTIVA"))
@@ -64,6 +79,9 @@ class AlertaServiceImplTest {
         assertEquals(1, result.size());
     }
 
+    /**
+     * Prueba unitaria para verificar que el método listarActivas devuelve solo alertas activas filtradas por tipo de alerta, sin importar la sucursal.
+     */
     @Test
     void debeFiltrarPorTipoAlerta() {
         AlertaStock a = alerta(1L, "ACTIVA");
@@ -76,6 +94,11 @@ class AlertaServiceImplTest {
         assertTrue(sinCoincidencia.isEmpty());
     }
 
+    /**
+     * Prueba unitaria para verificar que el método resolver cambia el estado de una alerta activa a resuelta correctamente.
+      * También verifica que se lanza una excepción al intentar resolver una alerta que ya está resuelta.
+      * Se utiliza un método auxiliar para crear alertas con diferentes estados para las pruebas.
+     */
     @Test
     void debeResolverAlertaActiva() {
         AlertaStock a = alerta(1L, "ACTIVA");
@@ -87,6 +110,9 @@ class AlertaServiceImplTest {
         assertEquals("RESUELTA", result.estado());
     }
 
+    /**
+     * Prueba unitaria para verificar que el método resolver lanza una excepción al intentar resolver una alerta que no existe.
+     */
     @Test
     void debeLanzarExcepcionAlResolverAlertaYaResuelta() {
         AlertaStock a = alerta(1L, "RESUELTA");

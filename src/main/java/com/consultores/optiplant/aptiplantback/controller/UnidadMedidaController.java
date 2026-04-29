@@ -10,6 +10,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Controlador de consulta para las unidades de medida disponibles en el sistema.
+ *
+ * <p>Este recurso es de solo lectura y se utiliza principalmente para poblar
+ * catálogos o formularios de inventario y productos.
+ */
 @RestController
 @RequestMapping("/api/unidades-medida")
 public class UnidadMedidaController {
@@ -20,6 +26,9 @@ public class UnidadMedidaController {
         this.unidadMedidaRepository = unidadMedidaRepository;
     }
 
+    /**
+     * Lista todas las unidades de medida registradas.
+     */
     @PreAuthorize("hasAnyRole('ADMIN','GERENTE','OPERADOR')")
     @GetMapping
     public ResponseEntity<ApiResponse<List<UnidadMedida>>> listar() {

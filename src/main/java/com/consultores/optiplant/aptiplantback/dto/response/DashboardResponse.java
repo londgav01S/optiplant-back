@@ -3,6 +3,9 @@ package com.consultores.optiplant.aptiplantback.dto.response;
 import java.math.BigDecimal;
 import java.util.List;
 
+/**
+ * DTO para la respuesta de métricas de dashboard.
+ */
 public record DashboardResponse(
     BigDecimal ventasDelDia,
     BigDecimal ventasDelMes,

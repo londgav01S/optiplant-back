@@ -35,6 +35,9 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+/**
+ * Pruebas unitarias para la implementación del servicio de inventarios.
+ */
 @ExtendWith(MockitoExtension.class)
 class InventarioServiceImplTest {
 
@@ -47,6 +50,14 @@ class InventarioServiceImplTest {
 
     // --- Fixtures ---
 
+    /**
+     * Método auxiliar para crear instancias de Inventario con diferentes configuraciones para las pruebas unitarias.
+     * @param id
+     * @param stock
+     * @param cpp
+     * @param stockMin
+     * @return Inventario con la configuración especificada para su uso en pruebas unitarias.
+     */
     private Inventario inventario(Long id, BigDecimal stock, BigDecimal cpp, BigDecimal stockMin) {
         Producto p = new Producto(); p.setId(1L); p.setNombre("P1"); p.setSku("SKU-1");
         Sucursal s = new Sucursal(); s.setId(1L); s.setNombre("S1");

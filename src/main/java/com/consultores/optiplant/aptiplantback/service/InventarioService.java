@@ -8,6 +8,9 @@ import java.math.BigDecimal;
 import java.util.List;
 import org.springframework.data.domain.Page;
 
+/**
+ * Contrato de negocio para la gestión de inventarios, incluyendo consultas, ajustes y movimientos de stock.
+ */
 public interface InventarioService {
 
     Page<InventarioResponse> consultarGlobal(int page, int size, Long sucursalId, Long productoId);

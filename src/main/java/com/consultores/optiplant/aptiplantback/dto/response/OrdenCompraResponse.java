@@ -6,6 +6,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * DTO para la respuesta de una orden de compra.
+ */
 public record OrdenCompraResponse(
     Long id,
     Long proveedorId,

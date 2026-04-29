@@ -16,6 +16,9 @@ import java.math.BigDecimal;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * Entidad que representa un detalle de una transferencia en el sistema.
+ */
 @Getter
 @Setter
 @Entity

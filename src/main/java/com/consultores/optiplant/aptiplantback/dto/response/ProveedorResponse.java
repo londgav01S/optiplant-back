@@ -2,6 +2,9 @@ package com.consultores.optiplant.aptiplantback.dto.response;
 
 import com.consultores.optiplant.aptiplantback.entity.Proveedor;
 
+/**
+ * DTO para la respuesta de un proveedor.
+ */
 public record ProveedorResponse(
         Long id,
         String nombre,

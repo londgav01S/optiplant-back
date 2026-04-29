@@ -18,6 +18,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/*
+* Implementación del servicio de usuarios, con validaciones de negocio y manejo de excepciones.
+* Se encarga de la lógica de creación, actualización, listado y desactivación de usuarios
+*/
 @Service
 @Transactional
 public class UsuarioServiceImpl implements UsuarioService {
@@ -27,6 +31,9 @@ public class UsuarioServiceImpl implements UsuarioService {
     private final SucursalRepository sucursalRepository;
     private final PasswordEncoder passwordEncoder;
 
+    /**
+     * Constructor del servicio de usuarios.
+     * */
     public UsuarioServiceImpl(
         UsuarioRepository usuarioRepository,
         RolRepository rolRepository,
@@ -39,6 +46,9 @@ public class UsuarioServiceImpl implements UsuarioService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    /*
+     * Lista los usuarios con filtros opcionales.
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<UsuarioResponse> listar(int page, int size, Boolean activo, Long sucursalId) {
@@ -51,6 +61,11 @@ public class UsuarioServiceImpl implements UsuarioService {
             .map(this::toResponse);
     }
 
+    /**
+     * Crea un nuevo usuario.
+     * @param request
+     * @return UsuarioResponse con los datos del usuario creado
+     */
     @Override
     public UsuarioResponse crear(UsuarioRequest request) {
         String email = normalizarEmail(request.email());
@@ -72,12 +87,23 @@ public class UsuarioServiceImpl implements UsuarioService {
         return toResponse(usuarioRepository.save(usuario));
     }
 
+    /**
+     * Obtiene un usuario por su ID.
+     * @param id
+     * @return UsuarioResponse con los datos del usuario encontrado.
+     */
     @Override
     @Transactional(readOnly = true)
     public UsuarioResponse obtenerPorId(Long id) {
         return toResponse(buscarUsuario(id));
     }
 
+    /**
+     * Actualiza un usuario existente.
+     * @param id
+     * @param request
+     * @return UsuarioResponse con los datos del usuario actualizado.
+     */
     @Override
     public UsuarioResponse actualizar(Long id, UsuarioRequest request) {
         Usuario usuario = buscarUsuario(id);
@@ -98,6 +124,11 @@ public class UsuarioServiceImpl implements UsuarioService {
         return toResponse(usuarioRepository.save(usuario));
     }
 
+    /**
+     * Cambia la contraseña de un usuario.
+     * @param id
+     * @param nuevaPassword
+     */
     @Override
     public void cambiarPassword(Long id, String nuevaPassword) {
         Usuario usuario = buscarUsuario(id);
@@ -105,6 +136,11 @@ public class UsuarioServiceImpl implements UsuarioService {
         usuarioRepository.save(usuario);
     }
 
+    /**
+     * Desactiva un usuario.
+     * @param id
+     * @return UsuarioResponse con los datos del usuario desactivado.
+     */
     @Override
     public UsuarioResponse desactivar(Long id) {
         Usuario usuario = buscarUsuario(id);
@@ -112,11 +148,21 @@ public class UsuarioServiceImpl implements UsuarioService {
         return toResponse(usuarioRepository.save(usuario));
     }
 
+    /**
+     * Busca un usuario por su ID
+     * @param id
+     * @return Usuario encontrado o excepción si no se encuentra
+     */
     private Usuario buscarUsuario(Long id) {
         return usuarioRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Usuario", id));
     }
 
+    /**
+     * Busca un rol por su nombre
+     * @param nombre
+     * @return Rol encontrado o excepción si no se encuentra
+     */
     private Rol buscarRolPorNombre(String nombre) {
         try {
             RolNombre rolNombre = RolNombre.valueOf(nombre.toUpperCase());
@@ -127,6 +173,11 @@ public class UsuarioServiceImpl implements UsuarioService {
         }
     }
 
+    /**
+     * Busca una sucursal opcional por su ID
+     * @param idSucursal
+     * @return Sucursal encontrada o null si el ID es nulo, o excepción si no se encuentra o está inactiva
+     */
     private Sucursal buscarSucursalOpcional(Long idSucursal) {
         if (idSucursal == null) {
             return null;
@@ -139,6 +190,11 @@ public class UsuarioServiceImpl implements UsuarioService {
         return sucursal;
     }
 
+    /**
+     * Valida que el email del usuario sea único.
+     * @param email
+     * @param usuarioIdActual
+     */
     private void validarEmailUnico(String email, Long usuarioIdActual) {
         boolean existe = usuarioIdActual == null
             ? usuarioRepository.existsByEmail(email)
@@ -149,6 +205,12 @@ public class UsuarioServiceImpl implements UsuarioService {
         }
     }
 
+    /**
+     * Valida un texto obligatorio.
+     * @param valor
+     * @param mensajeError
+     * @return String normalizado
+     */
     private String validarTextoObligatorio(String valor, String mensajeError) {
         if (valor == null || valor.trim().isEmpty()) {
             throw new BusinessException(mensajeError);
@@ -156,6 +218,10 @@ public class UsuarioServiceImpl implements UsuarioService {
         return valor.trim();
     }
 
+    /**
+     * Normaliza un email.
+     * @param email
+     */
     private String normalizarEmail(String email) {
         if (email == null || email.trim().isEmpty()) {
             throw new BusinessException("El email es obligatorio");
@@ -163,6 +229,11 @@ public class UsuarioServiceImpl implements UsuarioService {
         return email.trim().toLowerCase();
     }
 
+    /**
+     * Valida una contraseña.
+     * @param password
+     * @return String normalizado
+     */
     private String validarPassword(String password) {
         if (password == null || password.isBlank()) {
             throw new BusinessException("La contraseña es obligatoria");
@@ -174,6 +245,11 @@ public class UsuarioServiceImpl implements UsuarioService {
         return normalizada;
     }
 
+    /**
+     * Convierte un usuario a un UsuarioResponse.
+     * @param usuario
+     * @return UsuarioResponse con los datos del usuario.
+     */
     private UsuarioResponse toResponse(Usuario usuario) {
         Long sucursalId = usuario.getSucursal() != null ? usuario.getSucursal().getId() : null;
         String sucursalNombre = usuario.getSucursal() != null ? usuario.getSucursal().getNombre() : null;

@@ -12,6 +12,9 @@ import java.util.Set;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * Entidad que representa una lista de precios en el sistema.
+ */
 @Getter
 @Setter
 @Entity

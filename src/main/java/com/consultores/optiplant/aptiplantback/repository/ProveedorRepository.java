@@ -4,6 +4,9 @@ import com.consultores.optiplant.aptiplantback.entity.Proveedor;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+/**
+ * Repositorio de proveedores, con métodos personalizados para consultas por estado activo.
+ */
 public interface ProveedorRepository extends JpaRepository<Proveedor, Long> {
 
 	List<Proveedor> findByActivoTrue();

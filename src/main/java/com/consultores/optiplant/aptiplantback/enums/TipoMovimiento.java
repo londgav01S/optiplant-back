@@ -1,5 +1,8 @@
 package com.consultores.optiplant.aptiplantback.enums;
 
+/**
+ * Enumeración de tipos de movimiento.
+ */
 public enum TipoMovimiento {
     COMPRA,
     VENTA,

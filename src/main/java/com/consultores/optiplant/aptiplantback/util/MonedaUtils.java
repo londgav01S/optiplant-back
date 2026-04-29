@@ -3,6 +3,9 @@ package com.consultores.optiplant.aptiplantback.util;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
+/**
+ * Utilidades para manejo de valores monetarios, incluyendo redondeo y aplicación de descuentos. Proporciona métodos estáticos para asegurar consistencia en el manejo de precios en toda la aplicación.
+ */
 public final class MonedaUtils {
 
     private MonedaUtils() {}

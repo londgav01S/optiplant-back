@@ -15,6 +15,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Servicio de autorización para verificar permisos de acceso a recursos basados en el rol del usuario y la sucursal asociada.
+ */
 @Component("authorizationService")
 public class AuthorizationService {
 
@@ -36,6 +39,12 @@ public class AuthorizationService {
         this.inventarioRepository = inventarioRepository;
     }
 
+    /**
+     * Verifica si el usuario autenticado tiene permiso para listar las compras de una sucursal específica.
+     * @param authentication
+     * @param sucursalId
+     * @return true si el usuario tiene permiso, false en caso contrario
+     */
     @Transactional(readOnly = true)
     public boolean canListCompras(Authentication authentication, Long sucursalId) {
         Usuario usuario = getUsuario(authentication);
@@ -52,6 +61,12 @@ public class AuthorizationService {
         return false;
     }
 
+    /**
+     * Verifica si el usuario autenticado tiene permiso para crear una compra en una sucursal específica.
+     * @param authentication
+     * @param sucursalId
+     * @return true si el usuario tiene permiso, false en caso contrario
+     */
     @Transactional(readOnly = true)
     public boolean canCreateCompra(Authentication authentication, Long sucursalId) {
         Usuario usuario = getUsuario(authentication);
@@ -65,6 +80,12 @@ public class AuthorizationService {
         return sucursalUsuario.equals(sucursalId);
     }
 
+    /**
+     * Verifica si el usuario autenticado tiene permiso para leer una compra específica.
+     * @param authentication
+     * @param compraId
+     * @return true si el usuario tiene permiso, false en caso contrario
+     */
     @Transactional(readOnly = true)
     public boolean canReadCompra(Authentication authentication, Long compraId) {
         Usuario usuario = getUsuario(authentication);
@@ -79,6 +100,12 @@ public class AuthorizationService {
             && getSucursalId(usuario).equals(getSucursalCompra(compraId));
     }
 
+    /**
+     * Verifica si el usuario autenticado tiene permiso para escribir una compra específica.
+     * @param authentication
+     * @param compraId
+     * @return true si el usuario tiene permiso, false en caso contrario
+     */
     @Transactional(readOnly = true)
     public boolean canWriteCompra(Authentication authentication, Long compraId) {
         Usuario usuario = getUsuario(authentication);
@@ -93,6 +120,12 @@ public class AuthorizationService {
 
     // --- Transferencia ---
 
+    /**
+     * Verifica si el usuario autenticado tiene permiso para listar las transferencias de una sucursal específica.
+     * @param authentication
+     * @param sucursalId
+     * @return true si el usuario tiene permiso, false en caso contrario
+     */
     @Transactional(readOnly = true)
     public boolean canListTransferencias(Authentication authentication, Long sucursalId) {
         Usuario usuario = getUsuario(authentication);
@@ -101,6 +134,12 @@ public class AuthorizationService {
         return sucursalUsuario != null && sucursalUsuario.equals(sucursalId);
     }
 
+    /**
+     * Verifica si el usuario autenticado tiene permiso para crear una transferencia desde una sucursal específica.
+     * @param authentication
+     * @param sucursalOrigenId
+     * @return true si el usuario tiene permiso, false en caso contrario
+     */
     @Transactional(readOnly = true)
     public boolean canCreateTransferencia(Authentication authentication, Long sucursalOrigenId) {
         Usuario usuario = getUsuario(authentication);
@@ -109,6 +148,12 @@ public class AuthorizationService {
         return sucursalUsuario != null && sucursalUsuario.equals(sucursalOrigenId);
     }
 
+    /**
+     * Verifica si el usuario autenticado tiene permiso para leer una transferencia específica, considerando si es origen o destino.
+     * @param authentication
+     * @param transferenciaId
+     * @return  true si el usuario tiene permiso, false en caso contrario
+     */
     @Transactional(readOnly = true)
     public boolean canReadTransferencia(Authentication authentication, Long transferenciaId) {
         Usuario usuario = getUsuario(authentication);
@@ -121,6 +166,12 @@ public class AuthorizationService {
         return sucursalUsuario.equals(origenId) || sucursalUsuario.equals(destinoId);
     }
 
+    /**
+     * Verifica si el usuario autenticado tiene permiso para despachar una transferencia.
+     * @param authentication
+     * @param transferenciaId
+     * @return true si el usuario tiene permiso, false en caso contrario
+     */
     @Transactional(readOnly = true)
     public boolean canDespacharTransferencia(Authentication authentication, Long transferenciaId) {
         Usuario usuario = getUsuario(authentication);
@@ -132,6 +183,12 @@ public class AuthorizationService {
         return sucursalUsuario.equals(origenId);
     }
 
+    /**
+     * Verifica si el usuario autenticado tiene permiso para recepcionar una transferencia.
+     * @param authentication
+     * @param transferenciaId
+     * @return true si el usuario tiene permiso, false en caso contrario
+     */
     @Transactional(readOnly = true)
     public boolean canRecepcionarTransferencia(Authentication authentication, Long transferenciaId) {
         Usuario usuario = getUsuario(authentication);
@@ -145,6 +202,12 @@ public class AuthorizationService {
 
     // --- Venta ---
 
+    /**
+     * Verifica si el usuario autenticado tiene permiso para listar las ventas de una sucursal específica.
+     * @param authentication
+     * @param sucursalId
+     * @return true si el usuario tiene permiso, false en caso contrario
+     */
     @Transactional(readOnly = true)
     public boolean canListVentas(Authentication authentication, Long sucursalId) {
         Usuario usuario = getUsuario(authentication);
@@ -153,6 +216,12 @@ public class AuthorizationService {
         return sucursalUsuario != null && sucursalUsuario.equals(sucursalId);
     }
 
+    /**
+     * Verifica si el usuario autenticado tiene permiso para crear una venta en una sucursal específica.
+     * @param authentication
+     * @param sucursalId
+     * @return true si el usuario tiene permiso, false en caso contrario
+     */
     @Transactional(readOnly = true)
     public boolean canCreateVenta(Authentication authentication, Long sucursalId) {
         Usuario usuario = getUsuario(authentication);
@@ -161,6 +230,12 @@ public class AuthorizationService {
         return sucursalUsuario != null && sucursalUsuario.equals(sucursalId);
     }
 
+    /**
+     * Verifica si el usuario autenticado tiene permiso para leer una venta específica, considerando la sucursal asociada a la venta.
+     * @param authentication
+     * @param ventaId
+     * @return true si el usuario tiene permiso, false en caso contrario
+     */
     @Transactional(readOnly = true)
     public boolean canReadVenta(Authentication authentication, Long ventaId) {
         Usuario usuario = getUsuario(authentication);
@@ -174,6 +249,12 @@ public class AuthorizationService {
 
     // --- Inventario ---
 
+    /**
+     * Verifica si el usuario autenticado tiene permiso para leer el inventario de una sucursal específica.
+     * @param authentication
+     * @param inventarioId
+     * @return true si el usuario tiene permiso, false en caso contrario
+     */
     @Transactional(readOnly = true)
     public boolean canWriteInventario(Authentication authentication, Long inventarioId) {
         Usuario usuario = getUsuario(authentication);
@@ -187,21 +268,45 @@ public class AuthorizationService {
 
     // --- Helpers privados ---
 
+    /**
+     * Obtiene una transferencia por su ID.
+     * @param authentication
+     * @param transferenciaId
+     * @param id
+     * @return Transferencia encontrada o excepción si no se encuentra
+     */
     private Transferencia getTransferencia(Long id) {
         return transferenciaRepository.findById(id)
                 .orElseThrow(() -> new org.springframework.security.access.AccessDeniedException("Transferencia no encontrada"));
     }
 
+    /**
+     * Obtiene una venta por su ID.
+     * @param authentication
+     * @param ventaId
+     * @return Venta encontrada o excepción si no se encuentra
+     */
     private Venta getVenta(Long id) {
         return ventaRepository.findById(id)
                 .orElseThrow(() -> new org.springframework.security.access.AccessDeniedException("Venta no encontrada"));
     }
 
+    /**
+     * Obtiene un inventario por su ID.
+     * @param authentication
+     * @param id
+     * @return Inventario encontrada o excepción si no se encuentra
+     */
     private Inventario getInventario(Long id) {
         return inventarioRepository.findById(id)
                 .orElseThrow(() -> new org.springframework.security.access.AccessDeniedException("Inventario no encontrado"));
     }
 
+    /**
+     * Obtiene un usuario por su email.
+     * @param authentication
+     * @return Usuario encontrado o excepción si no se encuentra
+     */
     private Usuario getUsuario(Authentication authentication) {
         if (authentication == null || authentication.getName() == null) {
             throw new org.springframework.security.access.AccessDeniedException("Usuario no autenticado");
@@ -211,24 +316,50 @@ public class AuthorizationService {
             .orElseThrow(() -> new org.springframework.security.access.AccessDeniedException("Usuario no autorizado"));
     }
 
+    /**
+     * Obtiene la sucursal de una compra por su ID.
+     * @param authentication
+     * @param compraId
+     * @return Long con la sucursal de la compra o null si no se encuentra
+     */
     private Long getSucursalCompra(Long compraId) {
         OrdenCompra compra = ordenCompraRepository.findById(compraId)
             .orElseThrow(() -> new org.springframework.security.access.AccessDeniedException("Compra no encontrada"));
         return compra.getSucursal() != null ? compra.getSucursal().getId() : null;
     }
 
+    /**
+     * Obtiene la sucursal de un usuario.
+     * @param usuario
+     * @return Long con la sucursal del usuario o null si no se encuentra
+     */
     private Long getSucursalId(Usuario usuario) {
         return usuario.getSucursal() != null ? usuario.getSucursal().getId() : null;
     }
 
+    /**
+     * Verifica si el usuario es un administrador.
+     * @param usuario
+     * @return true si el usuario es un administrador, false en caso contrario
+     */
     private boolean isAdmin(Usuario usuario) {
         return usuario.getRol().getNombre() == RolNombre.ADMIN;
     }
 
+    /**
+     * Verifica si el usuario es un gerente.
+     * @param usuario
+     * @return true si el usuario es un gerente, false en caso contrario
+     */
     private boolean isGerente(Usuario usuario) {
         return usuario.getRol().getNombre() == RolNombre.GERENTE;
     }
 
+    /**
+     * Verifica si el usuario es un operador.
+     * @param usuario
+     * @return true si el usuario es un operador, false en caso contrario
+     */
     private boolean isOperador(Usuario usuario) {
         return usuario.getRol().getNombre() == RolNombre.OPERADOR;
     }

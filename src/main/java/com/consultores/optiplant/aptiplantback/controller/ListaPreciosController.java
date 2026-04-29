@@ -17,6 +17,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Controlador para gestión de listas de precios.
+ *
+ * <p>Provee endpoints para listar listas activas (accesible por roles operativos)
+ * y endpoints de administración (crear/actualizar) restringidos a administradores.
+ */
 @RestController
 @RequestMapping("/api/listas-precios")
 public class ListaPreciosController {
@@ -27,6 +33,10 @@ public class ListaPreciosController {
         this.listaPreciosService = listaPreciosService;
     }
 
+    /**
+     * Lista las listas de precios activas. Accesible por usuarios con rol ADMIN,
+     * GERENTE u OPERADOR.
+     */
     @PreAuthorize("hasAnyRole('ADMIN','GERENTE','OPERADOR')")
     @GetMapping
     public ResponseEntity<ApiResponse<List<ListaPreciosResponse>>> listar() {
@@ -37,6 +47,9 @@ public class ListaPreciosController {
         return ResponseEntity.ok(ApiResponse.success("Listas de precios obtenidas", data));
     }
 
+    /**
+     * Crea una nueva lista de precios. Requiere rol ADMIN.
+     */
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<ApiResponse<ListaPreciosResponse>> crear(@Valid @RequestBody ListaPreciosRequest request) {
@@ -45,6 +58,9 @@ public class ListaPreciosController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("Lista de precios creada", data));
     }
 
+    /**
+     * Actualiza una lista de precios existente. Requiere rol ADMIN.
+     */
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<ListaPreciosResponse>> actualizar(

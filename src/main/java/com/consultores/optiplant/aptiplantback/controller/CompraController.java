@@ -25,6 +25,15 @@ import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/compras")
+/*
+ * Controlador que expone los endpoints relacionados con órdenes de compra.
+ * Responsabilidades principales:
+ * - Listar órdenes con paginación y filtros.
+ * - Crear nuevas órdenes de compra.
+ * - Obtener, cancelar y confirmar recepciones de órdenes.
+ * La autorización para cada operación se delega a expresiones SpEL que llaman a
+ * authorizationService y a las anotaciones @PreAuthorize.
+ */
 public class CompraController {
 
     private final CompraService compraService;
@@ -36,10 +45,17 @@ public class CompraController {
     }
 
     /**
-     * GET /api/compras
-     * Listar órdenes de compra con filtros opcionales
+     * Lista órdenes de compra paginadas y opcionalmente filtradas por sucursal,
+     * proveedor o estado.
+     *
+     * @param page página (0-based) a recuperar.
+     * @param size tamaño de página.
+     * @param sucursalId (opcional) filtro por sucursal.
+     * @param proveedorId (opcional) filtro por proveedor.
+     * @param estado (opcional) estado de la orden para filtrar.
+     * @return página con las órdenes de compra que cumplen los filtros.
      */
-    @PreAuthorize("@authorizationService.canListCompras(authentication, #p2)")
+    @PreAuthorize("@authorizationService.canListCompras(authentication, #sucursalId)")
     @GetMapping
     public ResponseEntity<ApiResponse<Page<OrdenCompraResponse>>> listar(
         @RequestParam(defaultValue = "0") int page,
@@ -53,10 +69,13 @@ public class CompraController {
     }
 
     /**
-     * POST /api/compras
-     * Crear una nueva orden de compra
+     * Crea una nueva orden de compra en nombre del usuario autenticado.
+     *
+     * @param request DTO con los datos de la orden.
+     * @param auth contexto de autenticación (se usa para recuperar el usuario creador).
+     * @return la orden creada con estado HTTP 201.
      */
-    @PreAuthorize("@authorizationService.canCreateCompra(authentication, #p0.idSucursal)")
+    @PreAuthorize("@authorizationService.canCreateCompra(authentication, #request.idSucursal())")
     @PostMapping
     public ResponseEntity<ApiResponse<OrdenCompraResponse>> crear(
         @Valid @RequestBody OrdenCompraRequest request,
@@ -68,39 +87,55 @@ public class CompraController {
     }
 
     /**
-     * GET /api/compras/{id}
-     * Obtener una orden de compra específica con sus detalles
+     * Recupera una orden de compra por su identificador.
+     *
+     * @param id identificador de la orden.
+     * @param auth contexto de autenticación (no usado directamente aquí pero útil para
+     *             expresiones de autorización declarativas).
+     * @return la orden solicitada.
      */
-    @PreAuthorize("@authorizationService.canReadCompra(authentication, #p0)")
+    @PreAuthorize("@authorizationService.canReadCompra(authentication, #id)")
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<OrdenCompraResponse>> obtenerPorId(@PathVariable Long id, Authentication auth) {
+    public ResponseEntity<ApiResponse<OrdenCompraResponse>> obtenerPorId(@PathVariable Long id) {
         OrdenCompraResponse response = compraService.obtenerPorId(id);
         return ResponseEntity.ok(ApiResponse.success("Orden de compra obtenida", response));
     }
 
     /**
-     * PATCH /api/compras/{id}/cancelar
-     * Cancelar una orden de compra en estado PENDIENTE
+     * Cancela una orden de compra. Normalmente aplicable sólo si la orden está en
+     * estado PENDIENTE; la lógica de verificación la implementa el servicio.
+     *
+     * @param id identificador de la orden a cancelar.
+     * @param auth contexto de autenticación.
+     * @return la orden cancelada.
      */
-    @PreAuthorize("@authorizationService.canWriteCompra(authentication, #p0)")
+    @PreAuthorize("@authorizationService.canWriteCompra(authentication, #id)")
     @PatchMapping("/{id}/cancelar")
-    public ResponseEntity<ApiResponse<OrdenCompraResponse>> cancelar(@PathVariable Long id, Authentication auth) {
-        OrdenCompraResponse response = compraService.cancelar(id);
-        return ResponseEntity.ok(ApiResponse.success("Orden de compra cancelada", response));
-    }
-
-    @PreAuthorize("@authorizationService.canWriteCompra(authentication, #p0)")
-    @PostMapping("/{id}/cancelar")
-    public ResponseEntity<ApiResponse<OrdenCompraResponse>> cancelarCompat(@PathVariable Long id, Authentication auth) {
+    public ResponseEntity<ApiResponse<OrdenCompraResponse>> cancelar(@PathVariable Long id) {
         OrdenCompraResponse response = compraService.cancelar(id);
         return ResponseEntity.ok(ApiResponse.success("Orden de compra cancelada", response));
     }
 
     /**
-     * POST /api/compras/{id}/recepcion
-     * Confirmar la recepción de una orden de compra
+     * Compatibilidad: endpoint alternativo que también permite cancelar la orden
+     * usando POST en lugar de PATCH.
      */
-    @PreAuthorize("@authorizationService.canWriteCompra(authentication, #p0)")
+    @PreAuthorize("@authorizationService.canWriteCompra(authentication, #id)")
+    @PostMapping("/{id}/cancelar")
+    public ResponseEntity<ApiResponse<OrdenCompraResponse>> cancelarCompat(@PathVariable Long id) {
+        OrdenCompraResponse response = compraService.cancelar(id);
+        return ResponseEntity.ok(ApiResponse.success("Orden de compra cancelada", response));
+    }
+
+    /**
+     * Confirma la recepción (parcial o con detalle) de una orden de compra.
+     *
+     * @param id identificador de la orden.
+     * @param request datos de recepción (items, cantidades recibidas, etc.).
+     * @param auth contexto de autenticación.
+     * @return la orden actualizada tras la recepción.
+     */
+    @PreAuthorize("@authorizationService.canWriteCompra(authentication, #id)")
     @PostMapping("/{id}/recepcion")
     public ResponseEntity<ApiResponse<OrdenCompraResponse>> recepcionar(
         @PathVariable Long id,
@@ -112,7 +147,10 @@ public class CompraController {
         return ResponseEntity.ok(ApiResponse.success("Recepción de compra confirmada", response));
     }
 
-    @PreAuthorize("@authorizationService.canWriteCompra(authentication, #p0)")
+    /**
+     * Endpoint de compatibilidad para recibir una orden completa sin payload adicional.
+     */
+    @PreAuthorize("@authorizationService.canWriteCompra(authentication, #id)")
     @PostMapping("/{id}/recibir")
     public ResponseEntity<ApiResponse<OrdenCompraResponse>> recibirCompat(
         @PathVariable Long id,
@@ -124,11 +162,15 @@ public class CompraController {
     }
 
     /**
-     * Obtiene el ID del usuario autenticado del token JWT
+     * Obtiene el ID del usuario autenticado a partir del contexto de Spring Security.
+     *
+     * @param auth contexto de autenticación provisto por Spring Security.
+     * @return id del usuario autenticado.
+     * @throws ResponseStatusException con código 401 si no se encuentra el usuario activo.
      */
     private Long getAuthUserId(Authentication auth) {
         return usuarioRepository.findByEmailAndActivoTrue(auth.getName())
-            .map(u -> u.getId())
+            .map(com.consultores.optiplant.aptiplantback.entity.Usuario::getId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario no autenticado"));
     }
 }

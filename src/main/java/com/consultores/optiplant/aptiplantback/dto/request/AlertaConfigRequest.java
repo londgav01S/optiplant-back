@@ -5,6 +5,9 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
+/**
+ * DTO para la solicitud de configuración de una alerta de stock.
+ */
 public record AlertaConfigRequest(
     @NotNull Long idInventario,
     @NotNull TipoAlerta tipoAlerta,

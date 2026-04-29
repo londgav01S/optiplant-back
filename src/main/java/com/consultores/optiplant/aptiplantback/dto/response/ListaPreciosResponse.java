@@ -2,6 +2,9 @@ package com.consultores.optiplant.aptiplantback.dto.response;
 
 import com.consultores.optiplant.aptiplantback.entity.ListaPrecios;
 
+/**
+ * DTO para la respuesta de una lista de precios.
+ */
 public record ListaPreciosResponse(
         Long id,
         String nombre,
