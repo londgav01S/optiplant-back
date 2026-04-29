@@ -6,18 +6,20 @@ import java.util.List;
 public record DashboardResponse(
     BigDecimal ventasDelDia,
     BigDecimal ventasDelMes,
+    BigDecimal comprasMes,
     Long alertasActivas,
     Long transferenciasPendientes,
     Long ordenesCompraPendientes,
-    // Solo para dashboardGlobal()
+    BigDecimal stockTotal,
     List<VentaMensualResponse> ventasMensuales,
     Long productosBajoStockMinimo
 ) {
-    // Factory para dashboard de sucursal (sin métricas globales)
     public static DashboardResponse sucursal(BigDecimal ventasDelDia, BigDecimal ventasDelMes,
+                                              BigDecimal comprasMes,
                                               Long alertasActivas, Long transferenciasPendientes,
-                                              Long ordenesCompraPendientes) {
-        return new DashboardResponse(ventasDelDia, ventasDelMes, alertasActivas,
-                transferenciasPendientes, ordenesCompraPendientes, null, null);
+                                              Long ordenesCompraPendientes, BigDecimal stockTotal,
+                                              List<VentaMensualResponse> ventasMensuales) {
+        return new DashboardResponse(ventasDelDia, ventasDelMes, comprasMes, alertasActivas,
+                transferenciasPendientes, ordenesCompraPendientes, stockTotal, ventasMensuales, null);
     }
 }

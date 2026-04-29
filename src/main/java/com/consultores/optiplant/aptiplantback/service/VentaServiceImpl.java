@@ -2,6 +2,7 @@ package com.consultores.optiplant.aptiplantback.service;
 
 import com.consultores.optiplant.aptiplantback.dto.request.LineaVentaRequest;
 import com.consultores.optiplant.aptiplantback.dto.request.VentaRequest;
+import com.consultores.optiplant.aptiplantback.dto.response.DetalleVentaResponse;
 import com.consultores.optiplant.aptiplantback.dto.response.VentaResponse;
 import com.consultores.optiplant.aptiplantback.entity.DetalleVenta;
 import com.consultores.optiplant.aptiplantback.entity.Inventario;
@@ -92,7 +93,8 @@ public class VentaServiceImpl implements VentaService {
         // Guard: validar stock de todas las líneas ANTES de registrar cualquier movimiento
         validarStockParaTodasLasLineas(request.lineas(), sucursal.getId());
 
-        Venta venta = inicializarVenta(sucursal, vendedor, listaPrecios, request.descuentoGlobal());
+        Venta venta = inicializarVenta(sucursal, vendedor, listaPrecios, request.descuentoGlobal(), 
+                                       request.clienteNombre(), request.clienteDocumento());
         BigDecimal subtotal = procesarLineas(venta, request.lineas(), sucursal.getId(), listaPrecios);
         aplicarDescuentoGlobal(venta, subtotal);
 
@@ -105,7 +107,7 @@ public class VentaServiceImpl implements VentaService {
     @Override
     @Transactional(readOnly = true)
     public VentaResponse obtenerPorId(Long id) {
-        return toResponse(ventaRepository.findByIdWithRelaciones(id)
+        return toResponse(ventaRepository.findByIdWithDetalles(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Venta", id)));
     }
 
@@ -145,7 +147,8 @@ public class VentaServiceImpl implements VentaService {
     }
 
     private Venta inicializarVenta(Sucursal sucursal, Usuario usuario,
-                                    ListaPrecios listaPrecios, BigDecimal descuentoGlobal) {
+                                    ListaPrecios listaPrecios, BigDecimal descuentoGlobal,
+                                    String clienteNombre, String clienteDocumento) {
         Venta venta = new Venta();
         venta.setSucursal(sucursal);
         venta.setUsuario(usuario);
@@ -153,6 +156,8 @@ public class VentaServiceImpl implements VentaService {
         venta.setFecha(LocalDateTime.now());
         venta.setEstado(EstadoVenta.CONFIRMADA);
         venta.setDescuentoGlobal(descuentoGlobal != null ? descuentoGlobal : BigDecimal.ZERO);
+        venta.setClienteNombre(clienteNombre);
+        venta.setClienteDocumento(clienteDocumento);
         return venta;
     }
 
@@ -276,16 +281,33 @@ public class VentaServiceImpl implements VentaService {
     }
 
     private VentaResponse toResponse(Venta venta) {
+        List<DetalleVentaResponse> detallesResponse = venta.getDetalles().stream()
+                .map(detalle -> new DetalleVentaResponse(
+                        detalle.getId(),
+                        detalle.getProducto().getId(),
+                        detalle.getProducto().getNombre(),
+                        detalle.getCantidad(),
+                        detalle.getPrecioUnitario(),
+                        detalle.getDescuentoLinea(),
+                        detalle.getSubtotal()
+                ))
+                .toList();
+
         return new VentaResponse(
                 venta.getId(),
                 venta.getSucursal().getId(),
+                venta.getSucursal().getNombre(),
                 venta.getUsuario().getId(),
+                venta.getUsuario().getNombre(),
                 venta.getListaPrecios() != null ? venta.getListaPrecios().getId() : null,
                 venta.getFecha(),
                 venta.getSubtotal(),
                 venta.getDescuentoGlobal(),
                 venta.getTotal(),
                 venta.getEstado(),
-                venta.getMotivoAnulacion());
+                venta.getMotivoAnulacion(),
+                venta.getClienteNombre(),
+                venta.getClienteDocumento(),
+                detallesResponse);
     }
 }

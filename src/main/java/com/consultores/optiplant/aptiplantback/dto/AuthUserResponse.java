@@ -6,6 +6,7 @@ public record AuthUserResponse(
         String email,
         String rolNombre,
         Long sucursalId,
-        String sucursalNombre
+        String sucursalNombre,
+        Long listaPreciosId
 ) {
 }

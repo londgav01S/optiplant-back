@@ -1,6 +1,8 @@
 package com.consultores.optiplant.aptiplantback.service;
 
+import com.consultores.optiplant.aptiplantback.dto.response.DetalleOrdenCompraResponse;
 import com.consultores.optiplant.aptiplantback.dto.response.OrdenCompraResponse;
+import com.consultores.optiplant.aptiplantback.entity.DetalleOrdenCompra;
 import com.consultores.optiplant.aptiplantback.entity.Proveedor;
 import com.consultores.optiplant.aptiplantback.entity.OrdenCompra;
 import com.consultores.optiplant.aptiplantback.exception.BusinessException;
@@ -118,17 +120,37 @@ public class ProveedorServiceImpl implements ProveedorService {
     }
 
     private OrdenCompraResponse toResponse(OrdenCompra orden) {
+        List<DetalleOrdenCompraResponse> detalles = orden.getDetalles().stream()
+                .map(d -> new DetalleOrdenCompraResponse(
+                        d.getId(),
+                        d.getProducto().getId(),
+                        d.getProducto().getNombre(),
+                        d.getProducto().getSku(),
+                        d.getCantidadPedida(),
+                        d.getCantidadRecibida(),
+                        d.getPrecioUnitario(),
+                        d.getDescuento(),
+                        d.getSubtotal()
+                ))
+                .toList();
+
+        String usuarioNombre = orden.getUsuarioCrea().getNombre() + " " + orden.getUsuarioCrea().getApellido();
+
         return new OrdenCompraResponse(
                 orden.getId(),
                 orden.getProveedor().getId(),
+                orden.getProveedor().getNombre(),
                 orden.getSucursal().getId(),
+                orden.getSucursal().getNombre(),
                 orden.getUsuarioCrea().getId(),
+                usuarioNombre,
                 orden.getFechaCreacion(),
                 orden.getFechaEstimadaEntrega(),
                 orden.getFechaRecepcion(),
                 orden.getEstado(),
                 orden.getTotal(),
-                orden.getPlazoPagoDias()
+                orden.getPlazoPagoDias(),
+                detalles
         );
     }
 }

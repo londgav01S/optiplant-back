@@ -8,9 +8,16 @@ import com.consultores.optiplant.aptiplantback.entity.ProductoUnidad;
 import com.consultores.optiplant.aptiplantback.entity.UnidadMedida;
 import com.consultores.optiplant.aptiplantback.exception.BusinessException;
 import com.consultores.optiplant.aptiplantback.exception.ResourceNotFoundException;
+import com.consultores.optiplant.aptiplantback.entity.Inventario;
+import com.consultores.optiplant.aptiplantback.entity.ListaPrecios;
+import com.consultores.optiplant.aptiplantback.entity.PrecioProducto;
+import com.consultores.optiplant.aptiplantback.entity.Sucursal;
 import com.consultores.optiplant.aptiplantback.repository.InventarioRepository;
+import com.consultores.optiplant.aptiplantback.repository.ListaPreciosRepository;
+import com.consultores.optiplant.aptiplantback.repository.PrecioProductoRepository;
 import com.consultores.optiplant.aptiplantback.repository.ProductoRepository;
 import com.consultores.optiplant.aptiplantback.repository.ProductoUnidadRepository;
+import com.consultores.optiplant.aptiplantback.repository.SucursalRepository;
 import com.consultores.optiplant.aptiplantback.repository.UnidadMedidaRepository;
 import java.math.BigDecimal;
 import java.util.HashSet;
@@ -26,21 +33,32 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class ProductoServiceImpl implements ProductoService {
 
+    private static final String LISTA_PRECIO_BASE = "Precio Detal";
+
     private final ProductoRepository productoRepository;
     private final ProductoUnidadRepository productoUnidadRepository;
     private final UnidadMedidaRepository unidadMedidaRepository;
     private final InventarioRepository inventarioRepository;
+    private final PrecioProductoRepository precioProductoRepository;
+    private final ListaPreciosRepository listaPreciosRepository;
+    private final SucursalRepository sucursalRepository;
 
     public ProductoServiceImpl(
         ProductoRepository productoRepository,
         ProductoUnidadRepository productoUnidadRepository,
         UnidadMedidaRepository unidadMedidaRepository,
-        InventarioRepository inventarioRepository
+        InventarioRepository inventarioRepository,
+        PrecioProductoRepository precioProductoRepository,
+        ListaPreciosRepository listaPreciosRepository,
+        SucursalRepository sucursalRepository
     ) {
         this.productoRepository = productoRepository;
         this.productoUnidadRepository = productoUnidadRepository;
         this.unidadMedidaRepository = unidadMedidaRepository;
         this.inventarioRepository = inventarioRepository;
+        this.precioProductoRepository = precioProductoRepository;
+        this.listaPreciosRepository = listaPreciosRepository;
+        this.sucursalRepository = sucursalRepository;
     }
 
     @Override
@@ -72,6 +90,8 @@ public class ProductoServiceImpl implements ProductoService {
         if (request.unidades() != null && !request.unidades().isEmpty()) {
             reemplazarUnidades(guardado, request.unidades());
         }
+        guardarPrecioBase(guardado, request.precioBase());
+        inicializarInventarioEnSucursales(guardado);
 
         return toResponse(guardado);
     }
@@ -97,6 +117,7 @@ public class ProductoServiceImpl implements ProductoService {
         if (request.unidades() != null && !request.unidades().isEmpty()) {
             reemplazarUnidades(guardado, request.unidades());
         }
+        guardarPrecioBase(guardado, request.precioBase());
 
         return toResponse(guardado);
     }
@@ -189,13 +210,51 @@ public class ProductoServiceImpl implements ProductoService {
         return normalizado.isEmpty() ? null : normalizado;
     }
 
+    private void inicializarInventarioEnSucursales(Producto producto) {
+        for (Sucursal sucursal : sucursalRepository.findByActivoTrue()) {
+            boolean yaExiste = inventarioRepository
+                .findByProductoIdAndSucursalId(producto.getId(), sucursal.getId())
+                .isPresent();
+            if (!yaExiste) {
+                Inventario inv = new Inventario();
+                inv.setProducto(producto);
+                inv.setSucursal(sucursal);
+                inventarioRepository.save(inv);
+            }
+        }
+    }
+
+    private void guardarPrecioBase(Producto producto, BigDecimal precio) {
+        if (precio == null) {
+            return;
+        }
+        ListaPrecios lista = listaPreciosRepository.findByNombre(LISTA_PRECIO_BASE)
+            .orElseThrow(() -> new BusinessException("No existe la lista de precios '" + LISTA_PRECIO_BASE + "'"));
+
+        PrecioProducto pp = precioProductoRepository
+            .findFirstByProductoIdAndListaNombre(producto.getId(), LISTA_PRECIO_BASE)
+            .orElseGet(() -> {
+                PrecioProducto nuevo = new PrecioProducto();
+                nuevo.setProducto(producto);
+                nuevo.setLista(lista);
+                return nuevo;
+            });
+        pp.setPrecio(precio);
+        precioProductoRepository.save(pp);
+    }
+
     private ProductoResponse toResponse(Producto producto) {
+        BigDecimal precioBase = precioProductoRepository
+            .findFirstByProductoIdAndListaNombre(producto.getId(), LISTA_PRECIO_BASE)
+            .map(pp -> pp.getPrecio())
+            .orElse(null);
         return new ProductoResponse(
             producto.getId(),
             producto.getSku(),
             producto.getNombre(),
             producto.getDescripcion(),
-            producto.getActivo()
+            producto.getActivo(),
+            precioBase
         );
     }
 }

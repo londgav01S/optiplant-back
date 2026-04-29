@@ -64,13 +64,17 @@ public class AuthServiceImpl implements AuthService {
         String nombreCompleto = (usuario.getNombre() + " " + usuario.getApellido()).trim();
         Long sucursalId = usuario.getSucursal() != null ? usuario.getSucursal().getId() : null;
         String sucursalNombre = usuario.getSucursal() != null ? usuario.getSucursal().getNombre() : null;
+        Long listaPreciosId = usuario.getSucursal() != null && usuario.getSucursal().getListaPrecios() != null
+            ? usuario.getSucursal().getListaPrecios().getId()
+            : null;
         return new AuthUserResponse(
                 usuario.getId(),
                 nombreCompleto,
                 usuario.getEmail(),
                 usuario.getRol().getNombre().name(),
                 sucursalId,
-                sucursalNombre
+            sucursalNombre,
+            listaPreciosId
         );
     }
 }

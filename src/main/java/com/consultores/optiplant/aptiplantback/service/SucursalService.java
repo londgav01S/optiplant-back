@@ -7,11 +7,11 @@ public interface SucursalService {
 
     List<SucursalResponse> listarActivas();
 
-    SucursalResponse crear(String nombre, String direccion, String telefono);
+    SucursalResponse crear(String nombre, String direccion, String telefono, Long idListaPrecios);
 
     SucursalResponse obtenerPorId(Long id);
 
-    SucursalResponse actualizar(Long id, String nombre, String direccion, String telefono);
+    SucursalResponse actualizar(Long id, String nombre, String direccion, String telefono, Long idListaPrecios);
 
     SucursalResponse desactivar(Long id);
 }

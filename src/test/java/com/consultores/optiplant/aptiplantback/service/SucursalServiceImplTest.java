@@ -50,7 +50,7 @@ class SucursalServiceImplTest {
             Sucursal s = i.getArgument(0); s.setId(1L); return s;
         });
 
-        SucursalResponse result = sucursalService.crear("Sur", "Av. 5", "999");
+        SucursalResponse result = sucursalService.crear("Sur", "Av. 5", "999", null);
 
         assertEquals("Sur", result.nombre());
         assertEquals(true, result.activo());
@@ -58,7 +58,7 @@ class SucursalServiceImplTest {
 
     @Test
     void debeLanzarExcepcionAlCrearConNombreVacio() {
-        assertThrows(BusinessException.class, () -> sucursalService.crear("  ", null, null));
+        assertThrows(BusinessException.class, () -> sucursalService.crear("  ", null, null, null));
     }
 
     @Test
@@ -75,7 +75,7 @@ class SucursalServiceImplTest {
         when(sucursalRepository.findById(1L)).thenReturn(Optional.of(sucursal(1L, "Viejo")));
         when(sucursalRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
-        SucursalResponse result = sucursalService.actualizar(1L, "Nuevo", "Av. X", "111");
+        SucursalResponse result = sucursalService.actualizar(1L, "Nuevo", "Av. X", "111", null);
 
         assertEquals("Nuevo", result.nombre());
     }

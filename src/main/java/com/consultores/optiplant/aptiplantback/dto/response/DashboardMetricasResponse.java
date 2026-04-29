@@ -8,6 +8,7 @@ public record DashboardMetricasResponse(
         BigDecimal comprasMes,
         Long productosBajoStockCount,
         Long transferenciasPendientes,
+        BigDecimal stockTotal,
         List<DashboardProductoBajoStockResponse> productosBajoStock,
         List<DashboardVentaMensualChartResponse> ventasMensuales
 ) {

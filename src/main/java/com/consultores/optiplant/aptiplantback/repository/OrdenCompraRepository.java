@@ -2,6 +2,8 @@ package com.consultores.optiplant.aptiplantback.repository;
 
 import com.consultores.optiplant.aptiplantback.entity.OrdenCompra;
 import com.consultores.optiplant.aptiplantback.enums.EstadoOrdenCompra;
+import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.time.LocalDateTime;
@@ -36,9 +38,26 @@ public interface OrdenCompraRepository extends JpaRepository<OrdenCompra, Long> 
                                                                                        @Param("desde") LocalDateTime desde,
                                                                                        @Param("hasta") LocalDateTime hasta);
 
-    @Query("SELECT COUNT(o) FROM OrdenCompra o WHERE o.estado = :estado AND " +
-           "(:sucursalId IS NULL OR o.sucursal.id = :sucursalId)")
+    @Query("SELECT COUNT(o) FROM OrdenCompra o WHERE o.estado = :estado " +
+           "AND o.sucursal.id = :sucursalId")
     Long countByEstadoAndSucursal(@Param("estado") EstadoOrdenCompra estado,
                                    @Param("sucursalId") Long sucursalId);
+
+    @Query("SELECT COUNT(o) FROM OrdenCompra o WHERE o.estado = :estado")
+    Long countByEstadoGlobal(@Param("estado") EstadoOrdenCompra estado);
+
+    @Query("SELECT COALESCE(SUM(o.total), 0) FROM OrdenCompra o WHERE " +
+           "o.sucursal.id = :sucursalId AND " +
+           "o.fechaCreacion BETWEEN :desde AND :hasta AND o.estado IN :estados")
+    BigDecimal sumTotalByPeriodo(@Param("sucursalId") Long sucursalId,
+                                  @Param("desde") LocalDateTime desde,
+                                  @Param("hasta") LocalDateTime hasta,
+                                  @Param("estados") Collection<EstadoOrdenCompra> estados);
+
+    @Query("SELECT COALESCE(SUM(o.total), 0) FROM OrdenCompra o WHERE " +
+           "o.fechaCreacion BETWEEN :desde AND :hasta AND o.estado IN :estados")
+    BigDecimal sumTotalByPeriodoGlobal(@Param("desde") LocalDateTime desde,
+                                        @Param("hasta") LocalDateTime hasta,
+                                        @Param("estados") Collection<EstadoOrdenCompra> estados);
 }
 

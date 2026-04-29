@@ -5,7 +5,8 @@ public record SucursalResponse(
     String nombre,
     String direccion,
     String telefono,
-    Boolean activo
+    Boolean activo,
+    Long listaPreciosId
 ) {
 }
 

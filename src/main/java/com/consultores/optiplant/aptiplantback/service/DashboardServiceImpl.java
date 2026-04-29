@@ -17,6 +17,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+
 @Service
 @Transactional(readOnly = true)
 public class DashboardServiceImpl implements DashboardService {
@@ -45,53 +46,95 @@ public class DashboardServiceImpl implements DashboardService {
         this.inventarioRepository = inventarioRepository;
     }
 
+    private static final List<EstadoOrdenCompra> ESTADOS_COMPRA_RECIBIDA = List.of(
+            EstadoOrdenCompra.RECIBIDA,
+            EstadoOrdenCompra.RECIBIDA_CON_FALTANTES
+    );
+
     @Override
     public DashboardResponse dashboardSucursal(Long sucursalId) {
         return DashboardResponse.sucursal(
                 calcularVentasDelDia(sucursalId),
                 calcularVentasDelMes(sucursalId),
+                calcularComprasDelMes(sucursalId),
                 alertaRepository.countByEstadoAndSucursal(ESTADO_ALERTA_ACTIVA, sucursalId),
                 transferenciaRepository.countByEstadosAndSucursal(ESTADOS_TRANSFERENCIA_PENDIENTE, sucursalId),
-                ordenCompraRepository.countByEstadoAndSucursal(EstadoOrdenCompra.PENDIENTE, sucursalId)
+                ordenCompraRepository.countByEstadoAndSucursal(EstadoOrdenCompra.PENDIENTE, sucursalId),
+                calcularStockTotal(sucursalId),
+                obtenerVentasUltimosMeses(sucursalId)
         );
     }
 
     @Override
     public DashboardResponse dashboardGlobal() {
         return new DashboardResponse(
-                calcularVentasDelDia(null),
-                calcularVentasDelMes(null),
-                alertaRepository.countByEstadoAndSucursal(ESTADO_ALERTA_ACTIVA, null),
-                transferenciaRepository.countByEstadosAndSucursal(ESTADOS_TRANSFERENCIA_PENDIENTE, null),
-                ordenCompraRepository.countByEstadoAndSucursal(EstadoOrdenCompra.PENDIENTE, null),
-                obtenerVentasUltimosMeses(),
-                inventarioRepository.countBajoStockMinimo(null)
+                calcularVentasDelDiaGlobal(),
+                calcularVentasDelMesGlobal(),
+                calcularComprasDelMesGlobal(),
+                alertaRepository.countByEstadoGlobal(ESTADO_ALERTA_ACTIVA),
+                transferenciaRepository.countByEstadosGlobal(ESTADOS_TRANSFERENCIA_PENDIENTE),
+                ordenCompraRepository.countByEstadoGlobal(EstadoOrdenCompra.PENDIENTE),
+                calcularStockTotalGlobal(),
+                obtenerVentasUltimosMesesGlobal(),
+                inventarioRepository.countBajoStockMinimoGlobal()
         );
     }
 
-    // --- Cálculos de ventas ---
+    // --- Cálculos por sucursal ---
 
     private BigDecimal calcularVentasDelDia(Long sucursalId) {
         LocalDate hoy = LocalDate.now();
-        LocalDateTime inicio = hoy.atStartOfDay();
-        LocalDateTime fin = hoy.atTime(23, 59, 59);
-        return ventaRepository.sumTotalByPeriodo(sucursalId, inicio, fin, EstadoVenta.CONFIRMADA);
+        return ventaRepository.sumTotalByPeriodo(sucursalId, hoy.atStartOfDay(), hoy.atTime(23, 59, 59), EstadoVenta.CONFIRMADA);
     }
 
     private BigDecimal calcularVentasDelMes(Long sucursalId) {
         LocalDate hoy = LocalDate.now();
-        LocalDateTime inicio = hoy.withDayOfMonth(1).atStartOfDay();
-        LocalDateTime fin = hoy.atTime(23, 59, 59);
-        return ventaRepository.sumTotalByPeriodo(sucursalId, inicio, fin, EstadoVenta.CONFIRMADA);
+        return ventaRepository.sumTotalByPeriodo(sucursalId, hoy.withDayOfMonth(1).atStartOfDay(), hoy.atTime(23, 59, 59), EstadoVenta.CONFIRMADA);
     }
 
-    private List<VentaMensualResponse> obtenerVentasUltimosMeses() {
-        // Últimos 4 meses completos + el mes actual
+    private List<VentaMensualResponse> obtenerVentasUltimosMeses(Long sucursalId) {
         LocalDateTime desde = LocalDate.now().minusMonths(3).withDayOfMonth(1).atStartOfDay();
-        return ventaRepository
-                .obtenerVentasPorMes(desde, EstadoVenta.CONFIRMADA)
-                .stream()
-                .map(p -> new VentaMensualResponse(p.getAnio(), p.getMes(), p.getTotal()))
-                .toList();
+        return ventaRepository.obtenerVentasPorMes(desde, EstadoVenta.CONFIRMADA, sucursalId)
+                .stream().map(p -> new VentaMensualResponse(p.getAnio(), p.getMes(), p.getTotal())).toList();
+    }
+
+    private BigDecimal calcularComprasDelMes(Long sucursalId) {
+        LocalDate hoy = LocalDate.now();
+        BigDecimal total = ordenCompraRepository.sumTotalByPeriodo(sucursalId, hoy.withDayOfMonth(1).atStartOfDay(), hoy.atTime(23, 59, 59), ESTADOS_COMPRA_RECIBIDA);
+        return total != null ? total : BigDecimal.ZERO;
+    }
+
+    private BigDecimal calcularStockTotal(Long sucursalId) {
+        BigDecimal total = inventarioRepository.sumStockActual(sucursalId);
+        return total != null ? total : BigDecimal.ZERO;
+    }
+
+    // --- Cálculos globales (sin filtro de sucursal para evitar problemas con null en JPQL) ---
+
+    private BigDecimal calcularVentasDelDiaGlobal() {
+        LocalDate hoy = LocalDate.now();
+        return ventaRepository.sumTotalByPeriodoGlobal(hoy.atStartOfDay(), hoy.atTime(23, 59, 59), EstadoVenta.CONFIRMADA);
+    }
+
+    private BigDecimal calcularVentasDelMesGlobal() {
+        LocalDate hoy = LocalDate.now();
+        return ventaRepository.sumTotalByPeriodoGlobal(hoy.withDayOfMonth(1).atStartOfDay(), hoy.atTime(23, 59, 59), EstadoVenta.CONFIRMADA);
+    }
+
+    private List<VentaMensualResponse> obtenerVentasUltimosMesesGlobal() {
+        LocalDateTime desde = LocalDate.now().minusMonths(3).withDayOfMonth(1).atStartOfDay();
+        return ventaRepository.obtenerVentasPorMesGlobal(desde, EstadoVenta.CONFIRMADA)
+                .stream().map(p -> new VentaMensualResponse(p.getAnio(), p.getMes(), p.getTotal())).toList();
+    }
+
+    private BigDecimal calcularComprasDelMesGlobal() {
+        LocalDate hoy = LocalDate.now();
+        BigDecimal total = ordenCompraRepository.sumTotalByPeriodoGlobal(hoy.withDayOfMonth(1).atStartOfDay(), hoy.atTime(23, 59, 59), ESTADOS_COMPRA_RECIBIDA);
+        return total != null ? total : BigDecimal.ZERO;
+    }
+
+    private BigDecimal calcularStockTotalGlobal() {
+        BigDecimal total = inventarioRepository.sumStockActualGlobal();
+        return total != null ? total : BigDecimal.ZERO;
     }
 }

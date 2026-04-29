@@ -62,6 +62,12 @@ public class Venta extends BaseEntity {
     @Column(name = "motivo_anulacion", length = 300)
     private String motivoAnulacion;
 
+    @Column(name = "cliente_nombre", nullable = false, length = 255)
+    private String clienteNombre;
+
+    @Column(name = "cliente_documento", length = 50)
+    private String clienteDocumento;
+
     @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DetalleVenta> detalles = new ArrayList<>();
 }

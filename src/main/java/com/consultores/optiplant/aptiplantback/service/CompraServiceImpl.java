@@ -4,6 +4,7 @@ import com.consultores.optiplant.aptiplantback.dto.request.OrdenCompraRequest;
 import com.consultores.optiplant.aptiplantback.dto.request.LineaOrdenRequest;
 import com.consultores.optiplant.aptiplantback.dto.request.LineaRecepcionRequest;
 import com.consultores.optiplant.aptiplantback.dto.request.RecepcionCompraRequest;
+import com.consultores.optiplant.aptiplantback.dto.response.DetalleOrdenCompraResponse;
 import com.consultores.optiplant.aptiplantback.dto.response.OrdenCompraResponse;
 import com.consultores.optiplant.aptiplantback.entity.DetalleOrdenCompra;
 import com.consultores.optiplant.aptiplantback.entity.Inventario;
@@ -261,17 +262,38 @@ public class CompraServiceImpl implements CompraService {
     }
 
     private OrdenCompraResponse toResponse(OrdenCompra orden) {
+        List<DetalleOrdenCompraResponse> detalles = orden.getDetalles().stream()
+                .map(d -> new DetalleOrdenCompraResponse(
+                        d.getId(),
+                        d.getProducto().getId(),
+                        d.getProducto().getNombre(),
+                        d.getProducto().getSku(),
+                        d.getCantidadPedida(),
+                        d.getCantidadRecibida(),
+                        d.getPrecioUnitario(),
+                        d.getDescuento(),
+                        d.getSubtotal()
+                ))
+                .toList();
+
+        Usuario usuario = orden.getUsuarioCrea();
+        String usuarioNombre = usuario.getNombre() + " " + usuario.getApellido();
+
         return new OrdenCompraResponse(
                 orden.getId(),
                 orden.getProveedor().getId(),
+                orden.getProveedor().getNombre(),
                 orden.getSucursal().getId(),
-                orden.getUsuarioCrea().getId(),
+                orden.getSucursal().getNombre(),
+                usuario.getId(),
+                usuarioNombre,
                 orden.getFechaCreacion(),
                 orden.getFechaEstimadaEntrega(),
                 orden.getFechaRecepcion(),
                 orden.getEstado(),
                 orden.getTotal(),
-                orden.getPlazoPagoDias()
+                orden.getPlazoPagoDias(),
+                detalles
         );
     }
 

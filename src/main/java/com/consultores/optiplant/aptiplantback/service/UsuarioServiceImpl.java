@@ -5,6 +5,7 @@ import com.consultores.optiplant.aptiplantback.dto.response.UsuarioResponse;
 import com.consultores.optiplant.aptiplantback.entity.Rol;
 import com.consultores.optiplant.aptiplantback.entity.Sucursal;
 import com.consultores.optiplant.aptiplantback.entity.Usuario;
+import com.consultores.optiplant.aptiplantback.enums.RolNombre;
 import com.consultores.optiplant.aptiplantback.exception.BusinessException;
 import com.consultores.optiplant.aptiplantback.exception.ResourceNotFoundException;
 import com.consultores.optiplant.aptiplantback.repository.RolRepository;
@@ -64,8 +65,8 @@ public class UsuarioServiceImpl implements UsuarioService {
         usuario.setApellido(validarTextoObligatorio(request.apellido(), "El apellido es obligatorio"));
         usuario.setEmail(email);
         usuario.setPasswordHash(passwordEncoder.encode(validarPassword(request.password())));
-        usuario.setRol(buscarRol(request.idRol()));
-        usuario.setSucursal(buscarSucursalOpcional(request.idSucursal()));
+        usuario.setRol(buscarRolPorNombre(request.rolNombre()));
+        usuario.setSucursal(buscarSucursalOpcional(request.sucursalId()));
         usuario.setActivo(true);
 
         return toResponse(usuarioRepository.save(usuario));
@@ -87,8 +88,8 @@ public class UsuarioServiceImpl implements UsuarioService {
         usuario.setNombre(validarTextoObligatorio(request.nombre(), "El nombre es obligatorio"));
         usuario.setApellido(validarTextoObligatorio(request.apellido(), "El apellido es obligatorio"));
         usuario.setEmail(email);
-        usuario.setRol(buscarRol(request.idRol()));
-        usuario.setSucursal(buscarSucursalOpcional(request.idSucursal()));
+        usuario.setRol(buscarRolPorNombre(request.rolNombre()));
+        usuario.setSucursal(buscarSucursalOpcional(request.sucursalId()));
 
         if (request.password() != null && !request.password().isBlank()) {
             usuario.setPasswordHash(passwordEncoder.encode(validarPassword(request.password())));
@@ -116,9 +117,14 @@ public class UsuarioServiceImpl implements UsuarioService {
             .orElseThrow(() -> new ResourceNotFoundException("Usuario", id));
     }
 
-    private Rol buscarRol(Long idRol) {
-        return rolRepository.findById(idRol)
-            .orElseThrow(() -> new ResourceNotFoundException("Rol", idRol));
+    private Rol buscarRolPorNombre(String nombre) {
+        try {
+            RolNombre rolNombre = RolNombre.valueOf(nombre.toUpperCase());
+            return rolRepository.findByNombre(rolNombre)
+                .orElseThrow(() -> new BusinessException("Rol no encontrado: " + nombre));
+        } catch (IllegalArgumentException e) {
+            throw new BusinessException("Rol inválido: " + nombre);
+        }
     }
 
     private Sucursal buscarSucursalOpcional(Long idSucursal) {

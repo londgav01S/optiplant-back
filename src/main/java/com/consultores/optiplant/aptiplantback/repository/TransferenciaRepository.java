@@ -29,10 +29,13 @@ public interface TransferenciaRepository extends JpaRepository<Transferencia, Lo
                                         @Param("estado") EstadoTransferencia estado,
                                         Pageable pageable);
 
-    @Query("SELECT COUNT(t) FROM Transferencia t WHERE t.estado IN :estados AND " +
-           "(:sucursalId IS NULL OR t.sucursalOrigen.id = :sucursalId OR t.sucursalDestino.id = :sucursalId)")
+    @Query("SELECT COUNT(t) FROM Transferencia t WHERE t.estado IN :estados " +
+           "AND (t.sucursalOrigen.id = :sucursalId OR t.sucursalDestino.id = :sucursalId)")
     Long countByEstadosAndSucursal(@Param("estados") Collection<EstadoTransferencia> estados,
                                     @Param("sucursalId") Long sucursalId);
+
+    @Query("SELECT COUNT(t) FROM Transferencia t WHERE t.estado IN :estados")
+    Long countByEstadosGlobal(@Param("estados") Collection<EstadoTransferencia> estados);
 
     // Para reporte logístico: completadas con detalles cargados
     @Query("SELECT DISTINCT t FROM Transferencia t " +

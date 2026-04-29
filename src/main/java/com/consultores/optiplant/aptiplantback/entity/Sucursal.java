@@ -5,6 +5,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.util.HashSet;
@@ -33,6 +35,10 @@ public class Sucursal extends BaseEntity {
 
     @Column(name = "activo", nullable = false)
     private Boolean activo = true;
+
+    @ManyToOne
+    @JoinColumn(name = "id_lista_precios")
+    private ListaPrecios listaPrecios;
 
     @OneToMany(mappedBy = "sucursal")
     private Set<Usuario> usuarios = new HashSet<>();

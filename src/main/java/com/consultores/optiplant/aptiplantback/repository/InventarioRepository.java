@@ -24,12 +24,26 @@ public interface InventarioRepository extends JpaRepository<Inventario, Long> {
                                 @Param("productoId") Long productoId,
                                 Pageable pageable);
 
+    @Query("SELECT COALESCE(SUM(i.stockActual), 0) FROM Inventario i " +
+           "WHERE i.sucursal.id = :sucursalId")
+    java.math.BigDecimal sumStockActual(@Param("sucursalId") Long sucursalId);
+
+    @Query("SELECT COALESCE(SUM(i.stockActual), 0) FROM Inventario i")
+    java.math.BigDecimal sumStockActualGlobal();
+
     @Query("SELECT i FROM Inventario i JOIN FETCH i.producto " +
            "WHERE i.sucursal.id = :sucursalId " +
            "AND i.stockActual <= i.stockMinimo AND i.stockMinimo > 0")
     List<Inventario> findStockBajoEnSucursal(@Param("sucursalId") Long sucursalId);
 
-    @Query("SELECT COUNT(i) FROM Inventario i WHERE i.stockActual <= i.stockMinimo AND i.stockMinimo > 0 AND " +
-           "(:sucursalId IS NULL OR i.sucursal.id = :sucursalId)")
+    @Query("SELECT COUNT(i) FROM Inventario i WHERE i.stockActual <= i.stockMinimo AND i.stockMinimo > 0 " +
+           "AND i.sucursal.id = :sucursalId")
     Long countBajoStockMinimo(@Param("sucursalId") Long sucursalId);
+
+    @Query("SELECT COUNT(i) FROM Inventario i WHERE i.stockActual <= i.stockMinimo AND i.stockMinimo > 0")
+    Long countBajoStockMinimoGlobal();
+
+    @Query("SELECT i FROM Inventario i JOIN FETCH i.producto JOIN FETCH i.sucursal " +
+           "WHERE i.stockActual <= i.stockMinimo AND i.stockMinimo > 0")
+    List<Inventario> findStockBajoGlobal();
 }

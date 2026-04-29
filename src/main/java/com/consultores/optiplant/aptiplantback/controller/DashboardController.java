@@ -7,7 +7,6 @@ import com.consultores.optiplant.aptiplantback.dto.response.DashboardResponse;
 import com.consultores.optiplant.aptiplantback.dto.response.DashboardVentaMensualChartResponse;
 import com.consultores.optiplant.aptiplantback.entity.Inventario;
 import com.consultores.optiplant.aptiplantback.repository.InventarioRepository;
-import java.math.BigDecimal;
 import java.util.List;
 import com.consultores.optiplant.aptiplantback.service.DashboardService;
 import org.springframework.http.ResponseEntity;
@@ -62,9 +61,10 @@ public class DashboardController {
 
         DashboardMetricasResponse data = new DashboardMetricasResponse(
                 source.ventasDelMes(),
-                BigDecimal.ZERO,
+                source.comprasMes(),
                 source.productosBajoStockMinimo() != null ? source.productosBajoStockMinimo() : (long) productosBajoStock.size(),
                 source.transferenciasPendientes(),
+                source.stockTotal(),
                 productosBajoStock,
                 ventasMensuales
         );
@@ -74,7 +74,10 @@ public class DashboardController {
 
     private List<DashboardProductoBajoStockResponse> obtenerProductosBajoStock(Long sucursalId) {
         if (sucursalId == null) {
-            return List.of();
+            return inventarioRepository.findStockBajoGlobal().stream()
+                    .limit(20)
+                    .map(this::toProductoBajoStock)
+                    .toList();
         }
         return inventarioRepository.findStockBajoEnSucursal(sucursalId).stream()
                 .map(this::toProductoBajoStock)

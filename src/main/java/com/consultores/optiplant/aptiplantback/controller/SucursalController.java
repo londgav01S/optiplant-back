@@ -39,7 +39,7 @@ public class SucursalController {
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<ApiResponse<SucursalResponse>> crear(@Valid @RequestBody SucursalRequest request) {
-        SucursalResponse data = sucursalService.crear(request.nombre(), request.direccion(), request.telefono());
+        SucursalResponse data = sucursalService.crear(request.nombre(), request.direccion(), request.telefono(), request.idListaPrecios());
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("Sucursal creada", data));
     }
 
@@ -55,7 +55,7 @@ public class SucursalController {
     public ResponseEntity<ApiResponse<SucursalResponse>> actualizar(
             @PathVariable Long id,
             @Valid @RequestBody SucursalRequest request) {
-        SucursalResponse data = sucursalService.actualizar(id, request.nombre(), request.direccion(), request.telefono());
+        SucursalResponse data = sucursalService.actualizar(id, request.nombre(), request.direccion(), request.telefono(), request.idListaPrecios());
         return ResponseEntity.ok(ApiResponse.success("Sucursal actualizada", data));
     }
 

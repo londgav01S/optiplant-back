@@ -14,8 +14,11 @@ public interface AlertaRepository extends JpaRepository<AlertaStock, Long> {
 
     List<AlertaStock> findByInventarioIdAndEstado(Long inventarioId, String estado);
 
-    @Query("SELECT COUNT(a) FROM AlertaStock a WHERE a.estado = :estado AND " +
-           "(:sucursalId IS NULL OR a.inventario.sucursal.id = :sucursalId)")
+    @Query("SELECT COUNT(a) FROM AlertaStock a WHERE a.estado = :estado " +
+           "AND a.inventario.sucursal.id = :sucursalId")
     Long countByEstadoAndSucursal(@Param("estado") String estado, @Param("sucursalId") Long sucursalId);
+
+    @Query("SELECT COUNT(a) FROM AlertaStock a WHERE a.estado = :estado")
+    Long countByEstadoGlobal(@Param("estado") String estado);
 }
 
