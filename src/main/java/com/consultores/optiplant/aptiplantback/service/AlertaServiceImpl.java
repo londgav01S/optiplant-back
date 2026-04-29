@@ -2,10 +2,10 @@ package com.consultores.optiplant.aptiplantback.service;
 
 import com.consultores.optiplant.aptiplantback.dto.response.AlertaResponse;
 import com.consultores.optiplant.aptiplantback.entity.AlertaStock;
+import com.consultores.optiplant.aptiplantback.enums.EstadoAlerta;
 import com.consultores.optiplant.aptiplantback.enums.TipoAlerta;
 import com.consultores.optiplant.aptiplantback.exception.BusinessException;
 import com.consultores.optiplant.aptiplantback.exception.ResourceNotFoundException;
-import com.consultores.optiplant.aptiplantback.enums.TipoAlerta;
 import com.consultores.optiplant.aptiplantback.repository.AlertaRepository;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,8 +26,8 @@ public class AlertaServiceImpl extends ServiceNotImplementedSupport implements A
     @Transactional(readOnly = true)
     public List<AlertaResponse> listarActivas(Long sucursalId, TipoAlerta tipo) {
         List<AlertaStock> alertas = sucursalId != null
-                ? alertaRepository.findByInventarioSucursalIdAndEstado(sucursalId, "ACTIVA")
-                : alertaRepository.findByEstado("ACTIVA");
+                ? alertaRepository.findByInventarioSucursalIdAndEstado(sucursalId, EstadoAlerta.ACTIVA)
+                : alertaRepository.findByEstado(EstadoAlerta.ACTIVA);
 
         return alertas.stream()
                 .filter(alerta -> tipo == null || alerta.getTipoAlerta() == tipo)
@@ -40,11 +40,11 @@ public class AlertaServiceImpl extends ServiceNotImplementedSupport implements A
         AlertaStock alerta = alertaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("AlertaStock", id));
 
-        if ("RESUELTA".equalsIgnoreCase(alerta.getEstado())) {
+        if (alerta.getEstado() == EstadoAlerta.RESUELTA) {
             throw new BusinessException("La alerta ya fue resuelta");
         }
 
-        alerta.setEstado("RESUELTA");
+        alerta.setEstado(EstadoAlerta.RESUELTA);
         alerta.setFechaResolucion(LocalDateTime.now());
         return toResponse(alertaRepository.save(alerta));
     }

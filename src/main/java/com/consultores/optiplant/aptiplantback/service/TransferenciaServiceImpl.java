@@ -6,6 +6,7 @@ import com.consultores.optiplant.aptiplantback.dto.request.LineaRecepcionTransfe
 import com.consultores.optiplant.aptiplantback.dto.request.RecepcionTransferenciaRequest;
 import com.consultores.optiplant.aptiplantback.dto.request.TransferenciaRequest;
 import com.consultores.optiplant.aptiplantback.dto.response.TransferenciaResponse;
+import com.consultores.optiplant.aptiplantback.dto.response.TransferenciaDetalleResponse;
 import com.consultores.optiplant.aptiplantback.entity.DetalleTransferencia;
 import com.consultores.optiplant.aptiplantback.entity.Inventario;
 import com.consultores.optiplant.aptiplantback.entity.Producto;
@@ -123,7 +124,7 @@ public class TransferenciaServiceImpl implements TransferenciaService {
             detalleRepository.save(detalle);
         }
 
-        return toResponse(guardada);
+        return toResponse(cargarConDetalles(guardada.getId()));
     }
 
     /**
@@ -533,7 +534,18 @@ public class TransferenciaServiceImpl implements TransferenciaService {
                 t.getFechaEstimadaLlegada(),
                 t.getFechaRecepcion(),
                 t.getMotivoRechazo(),
-                t.getObservaciones());
+                t.getObservaciones(),
+                t.getDetalles() != null ? t.getDetalles().stream()
+                    .map(detalle -> new TransferenciaDetalleResponse(
+                        detalle.getId(),
+                        detalle.getProducto() != null ? detalle.getProducto().getId() : null,
+                        detalle.getProducto() != null ? detalle.getProducto().getNombre() : null,
+                        detalle.getCantidadSolicitada(),
+                        detalle.getCantidadDespachada(),
+                        detalle.getCantidadRecibida(),
+                        detalle.getFaltante(),
+                        detalle.getTratamientoFaltante()))
+                    .toList() : List.of());
     }
 
     // Tipo de datos auxiliar para validación de stock (evita usar arrays o Maps)

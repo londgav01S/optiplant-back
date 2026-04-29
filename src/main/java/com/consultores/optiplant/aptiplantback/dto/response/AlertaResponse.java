@@ -1,5 +1,6 @@
 package com.consultores.optiplant.aptiplantback.dto.response;
 
+import com.consultores.optiplant.aptiplantback.enums.EstadoAlerta;
 import com.consultores.optiplant.aptiplantback.enums.TipoAlerta;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -14,7 +15,7 @@ public record AlertaResponse(
     BigDecimal valorUmbral,
     BigDecimal stockAlMomento,
     LocalDateTime fechaGeneracion,
-    String estado,
+    EstadoAlerta estado,
     LocalDateTime fechaResolucion
 ) {
 }

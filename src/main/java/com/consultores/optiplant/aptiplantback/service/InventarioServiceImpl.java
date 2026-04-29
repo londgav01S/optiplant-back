@@ -7,6 +7,7 @@ import com.consultores.optiplant.aptiplantback.entity.AlertaStock;
 import com.consultores.optiplant.aptiplantback.entity.Inventario;
 import com.consultores.optiplant.aptiplantback.entity.MovimientoInventario;
 import com.consultores.optiplant.aptiplantback.entity.Usuario;
+import com.consultores.optiplant.aptiplantback.enums.EstadoAlerta;
 import com.consultores.optiplant.aptiplantback.enums.TipoAlerta;
 import com.consultores.optiplant.aptiplantback.enums.TipoMovimiento;
 import com.consultores.optiplant.aptiplantback.exception.BusinessException;
@@ -338,9 +339,9 @@ public class InventarioServiceImpl implements InventarioService {
      */
     private void resolverAlertasActivasSiCorresponde(Inventario inventario) {
         if (inventario.getStockActual().compareTo(inventario.getStockMinimo()) >= 0) {
-            List<AlertaStock> alertasActivas = alertaRepository.findByInventarioIdAndEstado(inventario.getId(), "ACTIVA");
+            List<AlertaStock> alertasActivas = alertaRepository.findByInventarioIdAndEstado(inventario.getId(), EstadoAlerta.ACTIVA);
             for (AlertaStock alerta : alertasActivas) {
-                alerta.setEstado("RESUELTA");
+                alerta.setEstado(EstadoAlerta.RESUELTA);
                 alerta.setFechaResolucion(LocalDateTime.now());
             }
             if (!alertasActivas.isEmpty()) {
@@ -358,7 +359,7 @@ public class InventarioServiceImpl implements InventarioService {
             return;
         }
 
-        boolean yaExiste = alertaRepository.findByInventarioIdAndEstado(inventario.getId(), "ACTIVA").stream()
+        boolean yaExiste = alertaRepository.findByInventarioIdAndEstado(inventario.getId(), EstadoAlerta.ACTIVA).stream()
                 .anyMatch(alerta -> alerta.getTipoAlerta() == TipoAlerta.STOCK_MINIMO);
         if (yaExiste) {
             return;
@@ -370,7 +371,7 @@ public class InventarioServiceImpl implements InventarioService {
         alerta.setValorUmbral(inventario.getStockMinimo());
         alerta.setStockAlMomento(inventario.getStockActual());
         alerta.setFechaGeneracion(LocalDateTime.now());
-        alerta.setEstado("ACTIVA");
+        alerta.setEstado(EstadoAlerta.ACTIVA);
         alertaRepository.save(alerta);
     }
 

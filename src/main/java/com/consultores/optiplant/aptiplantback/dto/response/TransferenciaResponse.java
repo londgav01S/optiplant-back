@@ -4,6 +4,7 @@ import com.consultores.optiplant.aptiplantback.enums.EstadoTransferencia;
 import com.consultores.optiplant.aptiplantback.enums.NivelUrgencia;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * DTO para la respuesta de una transferencia.
@@ -22,7 +23,8 @@ public record TransferenciaResponse(
     LocalDate fechaEstimadaLlegada,
     LocalDateTime fechaRecepcion,
     String motivoRechazo,
-    String observaciones
+    String observaciones,
+    List<TransferenciaDetalleResponse> detalles
 ) {
 }
 

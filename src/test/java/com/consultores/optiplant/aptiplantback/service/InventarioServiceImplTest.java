@@ -8,6 +8,7 @@ import com.consultores.optiplant.aptiplantback.entity.MovimientoInventario;
 import com.consultores.optiplant.aptiplantback.entity.Producto;
 import com.consultores.optiplant.aptiplantback.entity.Sucursal;
 import com.consultores.optiplant.aptiplantback.entity.Usuario;
+import com.consultores.optiplant.aptiplantback.enums.EstadoAlerta;
 import com.consultores.optiplant.aptiplantback.enums.TipoAlerta;
 import com.consultores.optiplant.aptiplantback.enums.TipoMovimiento;
 import com.consultores.optiplant.aptiplantback.exception.BusinessException;
@@ -81,7 +82,7 @@ class InventarioServiceImplTest {
 
         when(inventarioRepository.findById(1L)).thenReturn(Optional.of(inv));
         when(usuarioRepository.findById(1L)).thenReturn(Optional.of(u));
-        when(alertaRepository.findByInventarioIdAndEstado(1L, "ACTIVA")).thenReturn(new ArrayList<>());
+        when(alertaRepository.findByInventarioIdAndEstado(1L, EstadoAlerta.ACTIVA)).thenReturn(new ArrayList<>());
 
         // stock: 10 @ cpp 5 + 5 @ precio 10 = nuevo_cpp = (10*5 + 5*10) / 15 = 100/15 = 6.6667
         MovimientoResponse resp = inventarioService.registrarIngreso(
@@ -155,14 +156,14 @@ class InventarioServiceImplTest {
 
         when(inventarioRepository.findById(1L)).thenReturn(Optional.of(inv));
         when(usuarioRepository.findById(1L)).thenReturn(Optional.of(u));
-        when(alertaRepository.findByInventarioIdAndEstado(1L, "ACTIVA")).thenReturn(new ArrayList<>());
+        when(alertaRepository.findByInventarioIdAndEstado(1L, EstadoAlerta.ACTIVA)).thenReturn(new ArrayList<>());
 
         inventarioService.registrarRetiro(1L, TipoMovimiento.VENTA, BigDecimal.valueOf(4), "Venta", 1L);
 
         ArgumentCaptor<AlertaStock> captor = ArgumentCaptor.forClass(AlertaStock.class);
         verify(alertaRepository).save(captor.capture());
         assertEquals(TipoAlerta.STOCK_MINIMO, captor.getValue().getTipoAlerta());
-        assertEquals("ACTIVA", captor.getValue().getEstado());
+        assertEquals(EstadoAlerta.ACTIVA, captor.getValue().getEstado());
     }
 
     @Test
@@ -172,11 +173,11 @@ class InventarioServiceImplTest {
 
         AlertaStock alertaExistente = new AlertaStock();
         alertaExistente.setTipoAlerta(TipoAlerta.STOCK_MINIMO);
-        alertaExistente.setEstado("ACTIVA");
+        alertaExistente.setEstado(EstadoAlerta.ACTIVA);
 
         when(inventarioRepository.findById(1L)).thenReturn(Optional.of(inv));
         when(usuarioRepository.findById(1L)).thenReturn(Optional.of(u));
-        when(alertaRepository.findByInventarioIdAndEstado(1L, "ACTIVA")).thenReturn(List.of(alertaExistente));
+        when(alertaRepository.findByInventarioIdAndEstado(1L, EstadoAlerta.ACTIVA)).thenReturn(List.of(alertaExistente));
 
         inventarioService.registrarRetiro(1L, TipoMovimiento.VENTA, BigDecimal.valueOf(4), "Venta", 1L);
 

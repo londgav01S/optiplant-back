@@ -2,6 +2,7 @@ package com.consultores.optiplant.aptiplantback.service;
 
 import com.consultores.optiplant.aptiplantback.dto.response.DashboardResponse;
 import com.consultores.optiplant.aptiplantback.dto.response.VentaMensualResponse;
+import com.consultores.optiplant.aptiplantback.enums.EstadoAlerta;
 import com.consultores.optiplant.aptiplantback.enums.EstadoOrdenCompra;
 import com.consultores.optiplant.aptiplantback.enums.EstadoTransferencia;
 import com.consultores.optiplant.aptiplantback.enums.EstadoVenta;
@@ -28,7 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class DashboardServiceImpl implements DashboardService {
 
-    private static final String ESTADO_ALERTA_ACTIVA = "ACTIVA";
+    private static final EstadoAlerta ESTADO_ALERTA_ACTIVA = EstadoAlerta.ACTIVA;
     private static final List<EstadoTransferencia> ESTADOS_TRANSFERENCIA_PENDIENTE = List.of(
             EstadoTransferencia.PENDIENTE_APROBACION,
             EstadoTransferencia.EN_PREPARACION

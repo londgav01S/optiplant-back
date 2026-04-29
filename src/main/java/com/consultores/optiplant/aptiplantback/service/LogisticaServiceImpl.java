@@ -1,6 +1,7 @@
 package com.consultores.optiplant.aptiplantback.service;
 
 import com.consultores.optiplant.aptiplantback.dto.response.ReporteLogisticoResponse;
+import com.consultores.optiplant.aptiplantback.dto.response.TransferenciaDetalleResponse;
 import com.consultores.optiplant.aptiplantback.dto.response.TransferenciaResponse;
 import com.consultores.optiplant.aptiplantback.entity.DetalleTransferencia;
 import com.consultores.optiplant.aptiplantback.entity.Transferencia;
@@ -121,6 +122,17 @@ public class LogisticaServiceImpl implements LogisticaService {
                 t.getFechaEstimadaLlegada(),
                 t.getFechaRecepcion(),
                 t.getMotivoRechazo(),
-                t.getObservaciones());
+                t.getObservaciones(),
+                t.getDetalles() != null ? t.getDetalles().stream()
+                        .map(detalle -> new TransferenciaDetalleResponse(
+                                detalle.getId(),
+                                detalle.getProducto() != null ? detalle.getProducto().getId() : null,
+                                detalle.getProducto() != null ? detalle.getProducto().getNombre() : null,
+                                detalle.getCantidadSolicitada(),
+                                detalle.getCantidadDespachada(),
+                                detalle.getCantidadRecibida(),
+                                detalle.getFaltante(),
+                                detalle.getTratamientoFaltante()))
+                        .toList() : List.of());
     }
 }

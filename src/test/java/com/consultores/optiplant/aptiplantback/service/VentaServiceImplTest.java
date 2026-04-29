@@ -110,7 +110,7 @@ class VentaServiceImplTest {
         when(inventarioService.registrarRetiro(any(), any(), any(), any(), any()))
                 .thenReturn(mock(MovimientoResponse.class));
 
-        VentaRequest req = new VentaRequest(1L, 1L, BigDecimal.ZERO,
+        VentaRequest req = new VentaRequest("Cliente Test", "DOC123", 1L, 1L, BigDecimal.ZERO,
                 List.of(new LineaVentaRequest(1L, BigDecimal.valueOf(3), null)));
 
         VentaResponse resp = ventaService.crear(req, 1L);
@@ -138,7 +138,7 @@ class VentaServiceImplTest {
         when(inventarioService.registrarRetiro(any(), any(), any(), any(), any()))
                 .thenReturn(mock(MovimientoResponse.class));
 
-        VentaRequest req = new VentaRequest(1L, null, null,
+        VentaRequest req = new VentaRequest("Cliente Test", null, 1L, null, null,
                 List.of(new LineaVentaRequest(1L, BigDecimal.ONE, null)));
 
         VentaResponse resp = ventaService.crear(req, 1L);
@@ -157,7 +157,7 @@ class VentaServiceImplTest {
         when(usuarioRepository.findById(1L)).thenReturn(Optional.of(u));
         when(inventarioRepository.findByProductoIdAndSucursalId(1L, 1L)).thenReturn(Optional.of(inv));
 
-        VentaRequest req = new VentaRequest(1L, null, null,
+        VentaRequest req = new VentaRequest("Cliente Test", null, 1L, null, null,
                 List.of(new LineaVentaRequest(1L, BigDecimal.TEN, null)));
 
         BusinessException ex = assertThrows(BusinessException.class, () -> ventaService.crear(req, 1L));
@@ -173,7 +173,7 @@ class VentaServiceImplTest {
         when(usuarioRepository.findById(1L)).thenReturn(Optional.of(u));
         when(inventarioRepository.findByProductoIdAndSucursalId(1L, 1L)).thenReturn(Optional.empty());
 
-        VentaRequest req = new VentaRequest(1L, null, null,
+        VentaRequest req = new VentaRequest("Cliente Test", null, 1L, null, null,
                 List.of(new LineaVentaRequest(1L, BigDecimal.ONE, null)));
 
         BusinessException ex = assertThrows(BusinessException.class, () -> ventaService.crear(req, 1L));
@@ -196,7 +196,7 @@ class VentaServiceImplTest {
                 .thenReturn(mock(MovimientoResponse.class));
 
         // 10% descuento sobre 100 = 90
-        VentaRequest req = new VentaRequest(1L, null, BigDecimal.TEN,
+        VentaRequest req = new VentaRequest("Cliente Test", null, 1L, null, BigDecimal.TEN,
                 List.of(new LineaVentaRequest(1L, BigDecimal.ONE, null)));
 
         VentaResponse resp = ventaService.crear(req, 1L);

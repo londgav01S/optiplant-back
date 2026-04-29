@@ -1,5 +1,6 @@
 package com.consultores.optiplant.aptiplantback.entity;
 
+import com.consultores.optiplant.aptiplantback.enums.EstadoAlerta;
 import com.consultores.optiplant.aptiplantback.enums.TipoAlerta;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -70,7 +71,7 @@ public class AlertaStock extends BaseEntity {
      */
     @Enumerated(EnumType.STRING)
     @Column(name = "estado", nullable = false, length = 20)
-    private String estado = "ACTIVA";
+    private EstadoAlerta estado = EstadoAlerta.ACTIVA;
 
     /**
      * Fecha de resolución de la alerta de stock.

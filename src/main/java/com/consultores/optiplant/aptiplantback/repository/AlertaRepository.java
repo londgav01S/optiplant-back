@@ -1,6 +1,7 @@
 package com.consultores.optiplant.aptiplantback.repository;
 
 import com.consultores.optiplant.aptiplantback.entity.AlertaStock;
+import com.consultores.optiplant.aptiplantback.enums.EstadoAlerta;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -11,11 +12,11 @@ import org.springframework.data.repository.query.Param;
  */
 public interface AlertaRepository extends JpaRepository<AlertaStock, Long> {
 
-    List<AlertaStock> findByEstado(String estado);
+    List<AlertaStock> findByEstado(EstadoAlerta estado);
 
-    List<AlertaStock> findByInventarioSucursalIdAndEstado(Long sucursalId, String estado);
+    List<AlertaStock> findByInventarioSucursalIdAndEstado(Long sucursalId, EstadoAlerta estado);
 
-    List<AlertaStock> findByInventarioIdAndEstado(Long inventarioId, String estado);
+    List<AlertaStock> findByInventarioIdAndEstado(Long inventarioId, EstadoAlerta estado);
 
     /**
      * Cuenta las alertas de stock por estado y sucursal.
@@ -25,7 +26,7 @@ public interface AlertaRepository extends JpaRepository<AlertaStock, Long> {
      */
     @Query("SELECT COUNT(a) FROM AlertaStock a WHERE a.estado = :estado " +
            "AND a.inventario.sucursal.id = :sucursalId")
-    Long countByEstadoAndSucursal(@Param("estado") String estado, @Param("sucursalId") Long sucursalId);
+    Long countByEstadoAndSucursal(@Param("estado") EstadoAlerta estado, @Param("sucursalId") Long sucursalId);
 
     /**
      * Cuenta las alertas de stock por estado global.
@@ -33,6 +34,6 @@ public interface AlertaRepository extends JpaRepository<AlertaStock, Long> {
      * @return Long con el conteo de alertas por estado global.
      */
     @Query("SELECT COUNT(a) FROM AlertaStock a WHERE a.estado = :estado")
-    Long countByEstadoGlobal(@Param("estado") String estado);
+    Long countByEstadoGlobal(@Param("estado") EstadoAlerta estado);
 }
 

@@ -3,6 +3,7 @@ package com.consultores.optiplant.aptiplantback.service;
 import com.consultores.optiplant.aptiplantback.dto.response.AlertaResponse;
 import com.consultores.optiplant.aptiplantback.entity.AlertaStock;
 import com.consultores.optiplant.aptiplantback.entity.Inventario;
+import com.consultores.optiplant.aptiplantback.enums.EstadoAlerta;
 import com.consultores.optiplant.aptiplantback.enums.TipoAlerta;
 import com.consultores.optiplant.aptiplantback.exception.BusinessException;
 import com.consultores.optiplant.aptiplantback.repository.AlertaRepository;
@@ -38,7 +39,7 @@ class AlertaServiceImplTest {
      * @param estado
      * @return AlertaStock con la configuración especificada para su uso en pruebas unitarias.
      */
-    private AlertaStock alerta(Long id, String estado) {
+    private AlertaStock alerta(Long id, EstadoAlerta estado) {
         Inventario inv = new Inventario();
         inv.setId(10L);
 
@@ -58,12 +59,12 @@ class AlertaServiceImplTest {
      */
     @Test
     void debeListarAlertasActivasSinFiltroSucursal() {
-        when(alertaRepository.findByEstado("ACTIVA")).thenReturn(List.of(alerta(1L, "ACTIVA")));
+        when(alertaRepository.findByEstado(EstadoAlerta.ACTIVA)).thenReturn(List.of(alerta(1L, EstadoAlerta.ACTIVA)));
 
         List<AlertaResponse> result = alertaService.listarActivas(null, null);
 
         assertEquals(1, result.size());
-        assertEquals("ACTIVA", result.get(0).estado());
+        assertEquals(EstadoAlerta.ACTIVA, result.get(0).estado());
     }
 
     /**
@@ -71,8 +72,8 @@ class AlertaServiceImplTest {
      */
     @Test
     void debeListarAlertasActivasPorSucursal() {
-        when(alertaRepository.findByInventarioSucursalIdAndEstado(1L, "ACTIVA"))
-                .thenReturn(List.of(alerta(1L, "ACTIVA")));
+        when(alertaRepository.findByInventarioSucursalIdAndEstado(1L, EstadoAlerta.ACTIVA))
+                .thenReturn(List.of(alerta(1L, EstadoAlerta.ACTIVA)));
 
         List<AlertaResponse> result = alertaService.listarActivas(1L, null);
 
@@ -84,8 +85,8 @@ class AlertaServiceImplTest {
      */
     @Test
     void debeFiltrarPorTipoAlerta() {
-        AlertaStock a = alerta(1L, "ACTIVA");
-        when(alertaRepository.findByEstado("ACTIVA")).thenReturn(List.of(a));
+        AlertaStock a = alerta(1L, EstadoAlerta.ACTIVA);
+        when(alertaRepository.findByEstado(EstadoAlerta.ACTIVA)).thenReturn(List.of(a));
 
         List<AlertaResponse> result = alertaService.listarActivas(null, TipoAlerta.STOCK_MINIMO);
         assertEquals(1, result.size());
@@ -101,13 +102,13 @@ class AlertaServiceImplTest {
      */
     @Test
     void debeResolverAlertaActiva() {
-        AlertaStock a = alerta(1L, "ACTIVA");
+        AlertaStock a = alerta(1L, EstadoAlerta.ACTIVA);
         when(alertaRepository.findById(1L)).thenReturn(Optional.of(a));
         when(alertaRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
         AlertaResponse result = alertaService.resolver(1L);
 
-        assertEquals("RESUELTA", result.estado());
+        assertEquals(EstadoAlerta.RESUELTA, result.estado());
     }
 
     /**
@@ -115,7 +116,7 @@ class AlertaServiceImplTest {
      */
     @Test
     void debeLanzarExcepcionAlResolverAlertaYaResuelta() {
-        AlertaStock a = alerta(1L, "RESUELTA");
+        AlertaStock a = alerta(1L, EstadoAlerta.RESUELTA);
         when(alertaRepository.findById(1L)).thenReturn(Optional.of(a));
 
         assertThrows(BusinessException.class, () -> alertaService.resolver(1L));
